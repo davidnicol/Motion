@@ -1,0 +1,95 @@
+
+
+
+Motion is a virtual machine that uses capability objects
+called "motes" as its base type -- instead of binary words.
+
+A mote may be referenced by its mote identifier, a hard-to-guess character string.
+
+
+"mote identifier" is shortened to "mote id."
+
+
+The op-codes, themselves motes, recognized by motion at any moment,
+depend on the history of the machine.
+
+The syntax of Motion is like the syntax of a machine language:
+
+OP ARG*
+
+where the number of arguments required depends on the operation.
+
+Interacting with the Motion virtual machine is done by passing messages
+to it and receiving the resulting responses. The responses are white-space joined results of all motes presented in the message.
+
+
+
+The first whitespace-delimited token in a message MUST be a mote identifier.
+
+Sometimes, presentation of a single mote identifier is sufficient.
+
+Sometimes, the initial mote id takes arguments.
+
+Sometimes, the initial mote identifier establishes a dictionary of
+named motes for use in the rest of the message.
+
+Sometimes, the initial mote both takes arguments and establishes a dictionary.
+
+Motes are persistent between messages, as long as they are "sponsored" by
+another mote.
+
+Every motes has a type.
+
+Some motes represent "motion adapters" which provide functionality not
+available in the motion language.
+
+
+Here is a list of names in the default dictionary, and what they mean:
+
+MOTE   allocates a general purpose mote and returns it
+
+NAME [name] [mote] writes [name] into the current dictionary as an alias
+for [mote].
+
+NEWMOTE [name] is syntactic sugar that expands to NAME [name] MOTE
+
+SETMOTE [mote] [string] use this to store a string in a mote
+
+FETCHMOTE [mote] use this to recover the string stored in a mote
+
+STRING [\S+] interpret the non-whitespace sequence as a string instead of looking it up in the dictionary
+
+STORE [mote] [key] [value] use this to store a value in a mote, under a string key
+
+FETCH [mote] [key] use this to recover a value stored with STORE
+
+ASTORE [mote] [whole number] [value] use this to store a value in a mote, under a whole number index
+AFETCH [mote] [whole number] use this to recover a value stored with ASTORE
+
+NOTHING a no-op mote, which does not add anything to the response but does fill an argument slot
+
+PLACEHOLDER in a sequence definition, PLACEHOLDER will be filled with an argument
+
+GENSYM generate a hard-to-guess symbol that is not a mote id
+
+HEREDOC [token] [...] [token] use this to create a string containing whitespace
+
+PERFORM [sequence-mote] [arg]* invoke a sequence
+
+SEQUENCE [token] [...] [token] define a sequence mote using the current dictionary
+
+SAFE [token list] BEGIN [...] END only the names enumerated in the token list are available in the bodyof this sequence
+
+
+
+
+
+
+copyright 2008,2009,2010,2011,2012 David Nicol / TipJar LLC
+
+This work is licensed under the Creative Commons Attribution-ShareAlike
+3.0 Unported License. To view a copy of this license, visit
+http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to
+Creative Commons
+444 Castro Street, Suite 900
+Mountain View, California 94041 USA

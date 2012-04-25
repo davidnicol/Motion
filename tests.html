@@ -1,0 +1,194 @@
+
+<html><head><title>MOTION LANGUAGE REGRESSION TESTS</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script>
+
+var testArray = [
+     {     name: 'NEWMOTE [name] expands to NAME [name] MOTE',
+          input: 'NewMOTE nm nm',
+       expected: '\\d+[A-Za-z]+'
+     }, 
+     {     name: 'MOTE as scalar container',
+          input: 'newmote m setmote m string abcd fetchmote m',
+       expected: 'abcd'
+     }, 
+     {     name: 'MOTE as a-a container',
+          input: 'newmote m store m string def string abcd fetch m def',
+       expected: 'abcd'
+     }, 
+     {     name: 'name creates alias to an already named thing',
+          input: 'newmote nm name m nm astore m string 5 string abcd afetch m 5',
+       expected: 'abcd'
+     }, 
+     {     name: 'MOTE yields mote id',
+          input: 'MOTE',
+       expected: '\\d+[A-Za-z]+'
+     }, 
+     {     name: 'MOTE as scalar container',
+          input: 'name m MOTE setmote m string abcd fetchmote m',
+       expected: 'abcd'
+     }, 
+     {     name: 'MOTE as a-a container',
+          input: 'name m MOTE store m string def string abcd fetch m def',
+       expected: 'abcd'
+     }, 
+     {     name: 'MOTE as array container',
+          input: 'name m MOTE astore m string 5 string abcd afetch m 5',
+       expected: 'abcd'
+     }, 
+     {     name: 'NOTHING',
+          input: 'abc nothing def',
+       expected: 'abc def'
+     }, 
+     {     name: 'placeholder is an error',
+          input: ' placeholder x',
+       expected: 'FAIL PLACEHOLDER_INVOKED_OUTSIDE_OF_SEQUENCE_DEFINITION x'
+     }, 
+     {     name: 'GENSYM',
+          input: ' Gensym',
+       expected: 'gs\\d+gs\\d+gs\\d+'
+     }, 
+     {     name: '"STRING" escapes reserved word',
+          input: 'string string',
+       expected: 'string'
+     },
+     {     name: 'unknown keywords pass through unchanged',
+          input: 'abcd',
+       expected: 'abcd'
+     },
+     {     name: 'heredoc',
+          input: 'heredoc x abc def x',
+       expected: 'abc def'
+     },
+     {     name: 'only listed symbols are available within safe',
+          input: 'name a aa name b bb perform safe a begin a b end',
+       expected: 'aa b'
+     },
+     {     name: 'safe syntax',
+          input: 'name a aa name b bb perform safe a begin a b',
+       expected: '[\\s\\S]+SYNTAX[\\s\\S]+'
+     },
+     {     name: 'safe syntax',
+          input: 'name a aa name b bb perform safe a b',
+       expected: '[\\s\\S]+SYNTAX[\\s\\S]+'
+     },
+     {     name: 'names are case-insensitive',
+          input: 'name q heredoc x abc def x Q',
+       expected: 'abc def'
+     },
+     {     name: 'ephemeral mote identifiers include type',
+          input: 'sequence x abcdef x ',
+       expected: '\\d+SEQUENCE'
+     },
+     {     name: 'name nothing fail',
+          input: 'a name a',
+       expected: 'a fail name_missing_thing'
+     },
+     {     name: 'name noname fail',
+          input: 'a name',
+       expected: 'a fail name_missing_name'
+     },
+     {     name: 'perform a named sequence',
+          input: 'name q sequence x abcdef x perform Q',
+       expected: 'abcdef'
+     },
+     {     name: 'placeholder in a sequence',
+          input: 'perform sequence x a placeholder a b A e x cd',
+       expected: 'a b cd e'
+     },
+     {     name: 'placeholder layering',
+          input: 'name s1 sequence x placeholder S perform S test x name inner sequence h placeholder i we got i , i is what we got h perform s1 inner',
+       expected: 'we got test , test is what we got'
+     },
+
+
+];
+var Table;
+function GenerateHttpRequestObject(){
+     var httpRequest;
+       if (window.XMLHttpRequest) { // Mozilla, Safari, ...  
+      httpRequest = new XMLHttpRequest();  
+    } else if (window.ActiveXObject) { // IE  
+      try {  
+        httpRequest = new ActiveXObject("Msxml2.XMLHTTP");  
+      }   
+      catch (e) {  
+        try {  
+          httpRequest = new ActiveXObject("Microsoft.XMLHTTP");  
+        }   
+        catch (e) {}  
+      }  
+    }  
+  
+    if (!httpRequest) {  
+      alert('Giving up :( Cannot create an XMLHTTP instance');  
+      return false;  
+    }  
+    return  httpRequest;
+}
+function RunTest(N, TO){
+     var row = document.createElement("TR");
+     var Icol =  document.createElement("TD"); // number
+     var Ncol =  document.createElement("TD"); // name
+     var Ecol =  document.createElement("TD"); // expectation
+     var Mcol =  document.createElement("TD"); // message
+     var Pcol =  document.createElement("TD"); // progress
+     var Scol =  document.createElement("TD"); // pass/fail status
+
+     Icol.appendChild(document.createTextNode(N));
+     Ncol.appendChild(document.createTextNode(TO.name));
+     Mcol.appendChild(document.createTextNode(TO.input));
+     Ecol.appendChild(document.createTextNode(TO.expected));
+     Pcol.appendChild(document.createTextNode('launching'));
+     Scol.appendChild(document.createTextNode('...'));
+
+     row.appendChild(Icol);
+     row.appendChild(Ncol);
+     row.appendChild(Mcol);
+     row.appendChild(Ecol);
+     row.appendChild(Pcol);
+     row.appendChild(Scol);
+     var expec = TO.expected;
+     var e2 = expec.replace(/\s+/g, "\\s+");
+ // alert("looking for ["+e2+"]");
+     var re = new RegExp('^\\s*'+e2+'\\s*$',"i");
+     Table.appendChild(row);
+     var HR = GenerateHttpRequestObject();
+     HR.onreadystatechange = function(){
+           Pcol.innerHTML = HR.readyState + ' ' + HR.status;
+           if ( HR.readyState === 4 ){
+                 Pcol.innerHTML = HR.responseText;
+                 if (re.test(HR.responseText)){
+                   Scol.innerHTML = '<b>PASS</b>'
+                 }else{
+                   Scol.innerHTML = '<b>FAIL</b>'
+                 }
+           }
+
+     };
+     HR.open('POST','http://motes.tipjar.com/cgi-bin/motion/plain');
+     HR.send('MESSAGE='+TO.input);
+};
+
+function start(){
+      Table = document.getElementById('TestTable');
+      var testNumber = 1;
+
+      for (var i in testArray){
+             RunTest(i, testArray[i])
+      }
+
+};
+</script>
+<body onload="start()" >
+<p>
+Tests of the current version of Motion (http://motes.tipjar.com/cgi-bin/motion)
+</p><hr>
+<table id="TestTable" border="1">
+<tr><th>#</th><th>test name</th>
+<th>message</th><th>expectation</th>
+<th>progress</th><th>pass/fail</th><tr>
+
+
+</table>
+</body>
