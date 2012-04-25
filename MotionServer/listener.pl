@@ -29,8 +29,32 @@ listen(Server, SOMAXCONN)               || die "listen: $!";
 
 ### new process for every connection -- K.I.S.
 $SIG{CHLD} = 'IGNORE';
+
+# one process to start over when listener gets touched
+my $pid = $$;
+if (fork){
+   while(1){
+          sleep 10;
+          -M $0 < 0 or next;
+          fork and exit;
+          opendir DIR, '/motion' or die "opendir: $!";
+          my @D = readdir DIR;
+          for (@D){
+               /listenerpid-(\d+)/ or next;
+               unlink "/motion/$_";
+               warn "notifying $1 of hangup";
+               kill HUP => $1;
+          };
+          exec "perl $0"
+   }
+};
+
+
 fork;fork; # now we have four Listener processes waiting
+open TOUCH, '>', "/motion/listenerpid-$$" or die "touch: $!";
+close TOUCH;
 for(;;){
+             kill 0, $pid or exit;
              accept(Client, Server) or next; # accept can be interupted
              warn localtime." new connection";
              fork or last; # the child handles. The parent keeps listening.
