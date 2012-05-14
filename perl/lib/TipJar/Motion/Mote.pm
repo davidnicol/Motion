@@ -11,16 +11,15 @@ the motes virtual machine.
 
 =cut
 
-=head2 opcount
+=head2 wants
 A mote type knows
-how many operands it needs to take before
-it yields a result.
+how many operands it needs, and their types. 
 
 by default, no operands are needed.
 
 =cut
 
-sub opcount {0}
+sub wants {[]}
 
 =head2 mutable
 a mote type knows if it is mutable or not.
@@ -54,37 +53,85 @@ this method dies.
 
 sub sponsor { die "MOTE NOT CAPABLE OF SPONSORSHIP\n" }
 
+
+use TipJar::Motion::VMid;
+use TipJar::Motion::persistence;
+use Encode::Base32::Crockford qw(:all);
+=head2 NewMoteID
+Mote IDs are twentyfive character strings, representing
+one hundred bits, formed by concatenating five
+checksummed Crockford-encoded twenty-bit values.
+
+The first is a time value that increments every 64 seconds, taking
+just over two years to recycle.
+
+The second and fourth are random.
+
+The third is provided by the persistence layer and may be used
+for optimizing database lookups.
+
+The fifth is an organizational identifier to be used for routing
+messages between Motion instances. It defaults to "TEST=".
+
+=cut
+{
+my @Randoms;
+sub NewMoteID{
+    if (@Randoms < 2 + rand 10){
+         srand(rand(3000000000) + time + $$);
+         push @Randoms, rand(90000000) while ( rand(40) > 3);
+         push @Randoms, rand(200000000);
+         push @Randoms, rand(80000000) while ( rand(50) > 2);
+         push @Randoms, rand(100000000);
+         push @Randoms, rand(70000000) while ( rand(60) > 1);
+         for my $i ( 0 .. $#Randoms){
+             my $j = int rand @Randoms;
+             @Randoms[$i,$j] = @Randoms[$j,$i]
+         }
+
+    };
+    my ($r1,$r2) = splice @Randoms, 0, 2;
+    my @X = (
+       time() >> 6,
+       $r1,
+       TipJar::Motion::persistence::fresh_rowid(),
+       $r2
+    );
+    foreach (@X){
+         $_ = "00000" . base32_encode_with_checksum( $_  % 1048576 );
+         $_ = substr($_,-5,5);
+    };
+    join '',@X,VMid()
+}}
+
+=head1 type
+the type method reveals the Motion type, for operand validation
+and parse-time coercion.
+
+=cut
+sub type { 'BASE' }
+
 =head1 new
 C<new> is used to create a new mote of a type.
 When that type takes arguments, they must be provided.
 C<new> returns the result of running C<init> with the
 provided operands.
-
+the C<new> method allocates new mote id and validates operand types
+according to the list returned from the C<wants> method
 =cut
-use VMid;
-use Encode::Base32::Crockford qw(:all);
-sub NewLocalID{
-    ## FIXME relate these numbers to persistence rows
-    ## in the motes table
-    my @X;
-    @X = (1,2,3,4);
-    foreach (@X){
-         $_ = "00000" . base32_encode_with_checksum(
-                int( rand 100000000 ) % 1048576
-              );
-         $_ = substr($_,-5,5);
-    };
-    join '',@X   
-};
+
 sub new {
 
     my $pack = shift;
     ref $pack and $pack = ref $pack;
-    my $moteid = VMid() . NewLocalID();
+    my $moteid = NewMoteID();
     my $new = bless \$moteid, $pack;
-    my $want = $new->opcount;
-    my $have = @_;
-    $want == $have or die "OP COUNT MISMATCH\n";
+    my $wants = $new->wants;
+   
+    (@$want == @_ and
+     ! grep { $want->[$_] ne $_[$_]->type } 0 .. $#_
+    ) or die "OP MISMATCH\n";
+
     $new->init(@_);
 }
 
@@ -105,20 +152,10 @@ The mote ID is a 25-symbol character string consisting
 of five consecutive checksummed Crockford-encoded
 twenty bit numbers.
 
-The first part is the virtual machine ID,
-as defined in L<TipJar::Motion::VMid>. This file should
-be edited on installation. 
-
-The other four ...
-
+Base motes reveal their own moteids.
 =cut
 
 sub moteid { ${$_[0]} }
 
-=head VMid
-
-=head NewLocalID
-
-=cut
 
 1;
