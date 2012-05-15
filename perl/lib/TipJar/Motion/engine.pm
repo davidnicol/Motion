@@ -15,7 +15,7 @@ sub init{
     my $self = shift;
     $self->input(shift);
     $self->output(shift);
-    $self->parser(default_parser());
+    $self->parser(TipJar::Motion::default_parser->new);
     $self->failure('');
     $self
 }
