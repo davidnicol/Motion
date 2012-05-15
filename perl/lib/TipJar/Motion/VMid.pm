@@ -1,5 +1,6 @@
 
 package TipJar::Motion::VMid;
+use TipJar::Motion::configuration;
 
 =head1 virtual machine identifier portion of a mote identifier
 
@@ -20,14 +21,19 @@ machine number 867130 is reserved for testing; contact the author of
 this module for a machine number of your own, or use your PEN
 number if you have one. http://www.oid-info.com/get/1.3.6.1.4.1.37414
 is mine. Left-pad with zeroes when less than 32768.
+
+Non-PEN enterprise VMids will either start at ZZZZ and count down, or
+get assigned randomly or whimsically.
+
+We'll use PEN numbers mod 2**20 and increment by one until finding
+a free slot, and rethink mote-IDs when there are more than a half million
+interoperating Motion nodes.
+
 =cut
 
-sub VMid {
-       "TEST="  #### edit this at system installation time
-}
 sub import {
    my $caller = caller();
-   *{$caller.'VMid'} = \&VMid
+   *{$caller.'VMid'} = \&TipJar::Motion::configuration::VMid
 }
 
 1;
