@@ -19,22 +19,29 @@ sub init{
     $self->failure('');
     $self
 }
+=head2 process
+
+the process method reads the next mote from
+the input stream, prints the result of running
+its "yield_returnable" method to the output
+stream, and returns a boolean indicating if
+there is more to read from the input stream.
+
+=cut
+
 sub process{
     my $self = shift;
     @_ and carp "process method called with args";
     my $input = $self->input;
     my $output = $self->output;
     eval {
-       for (;;){
           my $this = $self->parser->next_mote($self);
           my $retval = $this->yield_returnable;
-          $retval and do {
+          defined $retval and do {
               $output->enqueue( $retval );
           };
-          $input->done and last;
-       };
-       1
     } or die "ENGINE: $@";
+    ! $input->done
 }
 
 1;

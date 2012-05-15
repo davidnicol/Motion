@@ -33,7 +33,7 @@ interoperating Motion nodes.
 
 sub import {
    my $caller = caller();
-   *{$caller.'VMid'} = \&TipJar::Motion::configuration::VMid
+   *{$caller.'::VMid'} = \&TipJar::Motion::configuration::VMid
 }
 
 1;

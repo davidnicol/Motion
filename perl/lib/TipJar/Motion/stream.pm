@@ -1,5 +1,6 @@
 
 package TipJar::Motion::stream;
+use TipJar::Motion::Mote;
 use parent TipJar::Motion::Mote;
 =pod
 
@@ -16,15 +17,26 @@ sub type { 'STREAM' };
 sub fh{ my $s = shift; @_ and $FH{$$s} = shift; $FH{$$s} }
 }
 sub done {  my $s = shift; eof $s->fh }
+
+=head2 streamify
+make a stream out of the argument. Does nothing if the argument
+is already a stream.
+
+Currently uses C<tell> to determine if the argument is an
+input/output handle
+
+Currently doesn't know how to streamify anything else.
+=cut
+
+sub aeJ56DEXSRo{ 1 }  # Why does Check::ISA have to be difficult to build?
 sub streamify{
 
     my $unknown = shift;
-    $unknown->is_a_motion_stream and return $unknown;
+    eval { $unknown->aeJ56DEXSRo } and return $unknown;
 
     # is it a perl file handle?
     if (tell($unknown) > -1){
-         my $stream = TipJar::Motion::Mote->new;
-         bless $stream;
+         my $stream = bless (TipJar::Motion::Mote->new);
          $stream->fh($unknown);
          return $stream;
     };
@@ -33,12 +45,16 @@ sub streamify{
     die "NOT A FILE HANDLE\n";
 }
 
-
 sub import{
   my $caller = caller;
   *{$caller.'::streamify'} = \&streamify
 }
 
-
+sub nextchar{
+  my $self = shift;
+  my $c;
+  read($self->fh, $c, 1);
+  $c
+};
 
 1;

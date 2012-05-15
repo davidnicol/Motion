@@ -1,5 +1,6 @@
 
-package TipJar::Motion::mote;
+package TipJar::Motion::Mote;
+use strict;
 
 =head1 virtual base class
 
@@ -127,19 +128,17 @@ sub new {
     my $moteid = NewMoteID();
     my $new = bless \$moteid, $pack;
     my $wants = $new->wants;
-   
-    (@$want == @_ and
-     ! grep { $want->[$_] ne $_[$_]->type } 0 .. $#_
-    ) or die "OP MISMATCH\n";
+    @$wants == @_ or die "OP COUNT MISMATCH\n";
+    my $argtypes = [ map { $_->type } @_ ];
+    "@$wants" eq "@$argtypes" or die "OP MISMATCH\n";
 
     $new->init(@_);
 }
 
 =head init
-the base class init doesn't do anything, and returns
-the mote identifier.
+the base class init doesn't do anything, and returns the mote itself.
 =cut
-sub init { $_[0]->moteid }
+sub init { $_[0] }
 
 =head1 moteid
 
