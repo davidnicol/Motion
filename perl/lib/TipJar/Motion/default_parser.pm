@@ -1,11 +1,13 @@
 
 package TipJar::Motion::default_parser;
 use parent TipJar::Motion::Mote;
-sub type('PARSER');
+sub type{'PARSER'};
 
 { my %L;
   sub lexicon{ my $P=shift; @_ and $L{$$P} = shift; $L{$$P} }
 }
+
+use TipJar::Motion::lexicon;
 
 sub init{
    my $P = shift;
