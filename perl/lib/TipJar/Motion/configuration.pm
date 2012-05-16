@@ -15,10 +15,14 @@ sub VMid {
 
 sub initial_lexicon {
        # matched key value pairs to be added to the default parser's lexicon
-       (
-            NOTHING => sub { TipJar::Motion::null->new },
+       {
+            NOTHING => sub { use TipJar::Motion::null; TipJar::Motion::null->new },
 
-       )
+       }
 }
 
+### edit this to tie %PL into a persistence infrastructure
+### capable of holding perl objects and their types
+### and sponsorship relationships (for GC.)
+{ my %PL; sub persistent_lexicon { \%PL } }
 1;

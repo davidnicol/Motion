@@ -1,21 +1,28 @@
 
 package TipJar::Motion::default_parser;
 use parent TipJar::Motion::Mote;
-sub type{'PARSER'};
-
-{ my %L;
-  sub lexicon{ my $P=shift; @_ and $L{$$P} = shift; $L{$$P} }
+use TipJar::Motion::type 'PARSER';
+use strict;
+{ 
+   my %L; sub lexicon{ my $P=shift; @_ and $L{$$P} = shift; $L{$$P} }
 }
 
 use TipJar::Motion::lexicon;
-
+use TipJar::Motion::configuration;
+{
+  my $p_lex = TipJar::Motion::lexicon->new;
+  my $i_lex = TipJar::Motion::lexicon->new;
+  $p_lex->lexicon(TipJar::Motion::configuration::persistent_lexicon);
+  $i_lex->lexicon(TipJar::Motion::configuration::initial_lexicon);
 sub init{
    my $P = shift;
-   $P->lexicon(TipJar::Motion::lexicon->new);
-   $P->lexicon->AddTerms(TipJar::Motion::configuration::initial_lexicon());
+   $P->lexicon(TipJar::Motion::lexicon->new)
+     ->AddLex($p_lex)
+     ->AddLex($i_lex)
+   ;
    $P
 }
-
+}
 
 =pod
 
@@ -59,11 +66,13 @@ sub next_mote{
     my $lexicon = $parser->lexicon;
     my $lookup_result = $lexicon->lookup($string);
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
-    my $wants = $lookup_result->$wants;
+    my $wants = $lookup_result->wants2;
     @$wants or return $lookup_result;
     my $subparser = $lookup_result->parser($parser);
+    my $typelex = $subparser->typelexicon;
     my @args;
     for my $w (@$wants){
+        ref $w or $w = $typelex->lookup($w);
         push @args, $subparser->next_mote($engine)->as($w)
     };
     $lookup_result->process(@args)

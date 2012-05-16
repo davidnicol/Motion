@@ -40,6 +40,7 @@ sub process{
           defined $retval and do {
               $output->enqueue( $retval );
           };
+      1
     } or die "ENGINE: $@";
     ! $input->done
 }

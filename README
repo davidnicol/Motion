@@ -22,11 +22,10 @@ where the number of arguments required depends on the operation.
 Interacting with the Motion virtual machine is done by passing messages
 to it and receiving the resulting responses. The responses are white-space joined results of all motes presented in the message.
 
+every whitespace-delimited token in a message must be either a mote identifier
+or a symbol that appears in the current lexicon.
 
-
-The first whitespace-delimited token in a message MUST be a mote identifier.
-
-Sometimes, presentation of a single mote identifier is sufficient.
+Sometimes, presentation of a single identifier is sufficient.
 
 Sometimes, the initial mote id takes arguments.
 

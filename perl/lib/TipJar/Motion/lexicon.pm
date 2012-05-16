@@ -27,6 +27,7 @@ Returns the invocant, allowing chaining.
 sub AddLex{
    my $invocant = shift;
    my $argument = shift;
+   eval { $argument->type eq 'LEXICON' } or Carp::confess("argument [$argument] is not a LEXICON mote");
    my $outer = $invocant->outer;
    my $new = TipJar::Motion::lexicon->new;
    $new->outer($outer);
@@ -37,8 +38,18 @@ sub AddLex{
 
 sub type { 'LEXICON' };
 {
-  my %L; sub lexicon{ my $s = shift; @_ and $L{$$s} = shift; $L{$$s} }
-  my %P; sub outer{ my $s = shift; @_ and $P{$$s} = shift; $P{$$s} }
+  my %L; sub lexicon{
+       my $s = shift; @_ and $L{$$s} = shift; $L{$$s}
+  }
+  my %P; sub outer{
+       my $s = shift;
+       if (defined $_[0]){
+          my $newval = shift;
+          !ref $newval and Carp::confess "non hash set as outer";
+          $P{$$s} = $newval;
+       };
+       $P{$$s}
+  }
 }
 sub perl_arrayrefname() { ref sub {} } # this is a constant, yo
 
@@ -62,12 +73,13 @@ sub AddTerms{
 };
 
 sub init { $_[0]->lexicon({}); $_[0] }
-
 sub lookup {
   my $self = shift;
-  my $l = $self->lexicon;
   my $term = shift;
-  exists $l->{$term} and return &{$l->{$term}};
+  my $l = $self->lexicon;
+  if(exists $l->{$term}){
+         return &{$l->{$term}}
+  };
   my $p = $self->outer;
   $p and $p->lookup($term)
 }

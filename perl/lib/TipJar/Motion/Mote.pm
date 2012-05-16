@@ -1,27 +1,74 @@
 
 package TipJar::Motion::Mote;
 use strict;
-
-=head1 virtual base class
+sub type {'BASE'}
+=head1 base class
 
 everything, absolutely everything, in Motion
 is a mote.
 
 Motes are the fundamental instructions to
-the motes virtual machine.
+the motes virtual machine, and also the data.
 
 =cut
 
 =head2 wants
 A mote type knows
-how many operands it needs, and their types. 
+how many arguments its constructor needs, and their types. 
 
 by default, no operands are needed.
 
+=head2 wants2
+
+An operator mote type knows
+how many arguments it requires, and their types. 
+
+by default, no operands are needed.
+
+=head2 process
+
+Accept the arguments described in the wants2 list and
+return a result mote.
+
+Base motes return themselves.
+
+=head2 parser
+
+Provide a new parser for interpreting subsequent input characters.
+Takes the old parser as an argument.
+Base motes return the argument.
+	
 =cut
 
 sub wants {[]}
+sub wants2 {[]}
+sub process { $_[0] }
+sub parser { $_[1] }
+sub as {
+   my $m = shift;
+   my $m_type = $m->type;
+   my $goal_type = shift;
+   $m_type eq $goal_type and return $m;
+   $goal_type or die "FALSE TYPE\n";
+   my $test = eval { 
+          my $coercionmethod = 'as'.$goal_type;
+          $m->$coercionmethod 
+   };
+   $test or die "COERCION FROM $m_type TO $goal_type NOT DEFINED\n";
+   $test
+};
+=head2 as
+Coerce the invocant to the type named as the argument.
 
+Base motes have one coercion defined, to STRING type,
+and that coercion yields the moteID.
+=cut
+sub asSTRING {
+    my $m = shift;
+    my $string = TipJar::Motion::string->new;
+    $string->string( $m->moteid );
+    $string
+}
 =head2 mutable
 a mote type knows if it is mutable or not.
 Mutable motes may not be resolved when compiling new
@@ -58,6 +105,7 @@ sub sponsor { die "MOTE NOT CAPABLE OF SPONSORSHIP\n" }
 use TipJar::Motion::VMid;
 use TipJar::Motion::persistence;
 use Encode::Base32::Crockford qw(:all);
+
 =head2 NewMoteID
 Mote IDs are twentyfive character strings, representing
 one hundred bits, formed by concatenating five
@@ -106,11 +154,13 @@ sub NewMoteID{
 }}
 
 =head1 type
-the type method reveals the Motion type, for operand validation
-and parse-time coercion.
-
+the type method reveals the name Motion type, for operand validation
+and parse-time coercion. Types are motes of type called TYPE, and their
+names appear in the lexicon of the default parser. The
+TipJar::Motion::type package exports the C<type> method 
+into the current package and registers the name with the
+current parser's types lexicon.
 =cut
-sub type { 'BASE' }
 
 =head1 new
 C<new> is used to create a new mote of a type.
@@ -156,5 +206,13 @@ Base motes reveal their own moteids.
 
 sub moteid { ${$_[0]} }
 
+=head1 yield_returnable
+
+the yield_returnable method provides a character string
+which the engine writes to its output.
+
+Base motes yield the results of their asSTRING functions.
+=cut
+sub yield_returnable { $_[0]->as('STRING')->string }
 
 1;
