@@ -1,0 +1,18 @@
+
+
+Capability object "membrane" theory
+(see http://soft.vub.ac.be/~tvcutsem/invokedynamic/js-membranes )
+has a very useful concept of "wet" and "dry" zones, regarding
+a "membrane" abstraction.
+
+In Motion, messages must consist of tokens that exist in the
+current lexicon, including the lexicons of outer scopes, bounded
+externally by motes directly referred to by their mote identifiers.
+
+Aside from mote identifiers which are inherently wet and should only
+be shared when they identify dry motes, Motion enforces a basic wet/dry
+distinction based on what is visible in the current lexicon.
+
+Wet: not in current lexicon
+Dry: in current lexicon
+

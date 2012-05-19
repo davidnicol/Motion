@@ -1,6 +1,7 @@
 
 package TipJar::Motion::Mote;
 use strict;
+use TipJar::Motion::configuration;
 sub type {'BASE'}
 =head1 base class
 
@@ -97,13 +98,33 @@ mote to register sponsorship of another mote.
 Default motes are not capable of sponsorship so
 this method dies.
 
+=head1 new
+C<new> is used to create a new mote of a type.
+When that type takes arguments, they must be provided.
+C<new> returns the result of running C<init> with the
+provided operands.
+the C<new> method allocates new mote id and validates operand types
+according to the list returned from the C<wants> method
 =cut
 
-sub sponsor { die "MOTE NOT CAPABLE OF SPONSORSHIP\n" }
+sub new {
+
+    my $pack = shift;
+    ref $pack and $pack = ref $pack;
+    my $mote = TipJar::Motion::configuration::base_obj(NewMoteID());
+    my $new = bless $mote, $pack;
+    my $wants = $new->wants;
+    @$wants == @_ or die "OP COUNT MISMATCH\n";
+    my $argtypes = [ map { $_->type } @_ ];
+    "@$wants" eq "@$argtypes" or die "OP MISMATCH\n";
+
+    $new->init(@_);
+}
 
 
-use TipJar::Motion::VMid;
-use TipJar::Motion::persistence;
+INIT{
+require TipJar::Motion::VMid;
+}
 use Encode::Base32::Crockford qw(:all);
 
 =head2 NewMoteID
@@ -126,6 +147,8 @@ messages between Motion instances. It defaults to "TEST=".
 {
 my @Randoms;
 sub NewMoteID{
+    # this is more complex than it has to be
+    # please waste as little additional time on it as possible.
     if (@Randoms < 2 + rand 10){
          srand(rand(3000000000) + time + $$);
          push @Randoms, rand(90000000) while ( rand(40) > 3);
@@ -137,13 +160,12 @@ sub NewMoteID{
              my $j = int rand @Randoms;
              @Randoms[$i,$j] = @Randoms[$j,$i]
          }
-
     };
     my ($r1,$r2) = splice @Randoms, 0, 2;
     my @X = (
        time() >> 6,
        $r1,
-       TipJar::Motion::persistence::fresh_rowid(),
+       TipJar::Motion::configuration::fresh_rowid(),
        $r2
     );
     foreach (@X){
@@ -152,6 +174,10 @@ sub NewMoteID{
     };
     join '',@X,VMid()
 }}
+
+sub alpha_row_id { substr($$_[0], 10,4) }
+sub row_id { base32_decode_with_checksum( substr($$_[0], 10,5)) }
+sub VMid { substr($$_[0], -5,4) }
 
 =head1 type
 the type method reveals the name Motion type, for operand validation
@@ -162,28 +188,6 @@ into the current package and registers the name with the
 current parser's types lexicon.
 =cut
 
-=head1 new
-C<new> is used to create a new mote of a type.
-When that type takes arguments, they must be provided.
-C<new> returns the result of running C<init> with the
-provided operands.
-the C<new> method allocates new mote id and validates operand types
-according to the list returned from the C<wants> method
-=cut
-
-sub new {
-
-    my $pack = shift;
-    ref $pack and $pack = ref $pack;
-    my $moteid = NewMoteID();
-    my $new = bless \$moteid, $pack;
-    my $wants = $new->wants;
-    @$wants == @_ or die "OP COUNT MISMATCH\n";
-    my $argtypes = [ map { $_->type } @_ ];
-    "@$wants" eq "@$argtypes" or die "OP MISMATCH\n";
-
-    $new->init(@_);
-}
 
 =head init
 the base class init doesn't do anything, and returns the mote itself.
@@ -214,5 +218,12 @@ which the engine writes to its output.
 Base motes yield the results of their asSTRING functions.
 =cut
 sub yield_returnable { $_[0]->as('STRING')->string }
+
+use TipJar::Motion::Sponsortable;
+sub sponsor { 
+   my $self = shift;
+   my $beneficiary = shift;
+   Sponsortable->add($self =>  $beneficiary);
+}
 
 1;

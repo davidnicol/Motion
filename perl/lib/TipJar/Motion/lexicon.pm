@@ -36,7 +36,9 @@ sub AddLex{
    $invocant
 }
 
-sub type { 'LEXICON' };
+use TipJar::Motion::type 'LEXICON' ;
+
+
 {
   my %L; sub lexicon{
        my $s = shift; @_ and $L{$$s} = shift; $L{$$s}
@@ -72,7 +74,16 @@ sub AddTerms{
   $self
 };
 
+sub explode{ %{ $_[0]->lexicon } }
+
 sub init { $_[0]->lexicon({}); $_[0] }
+sub Exists {
+  my $self = shift;
+  my $term = shift;
+  exists $self->lexicon->{$term} and return 1;
+  my $p = $self->outer;
+  $p and $p->Exists($term)
+}
 sub lookup {
   my $self = shift;
   my $term = shift;

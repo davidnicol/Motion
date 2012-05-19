@@ -69,11 +69,11 @@ sub next_mote{
     my $wants = $lookup_result->wants2;
     @$wants or return $lookup_result;
     my $subparser = $lookup_result->parser($parser);
-    my $typelex = $subparser->typelexicon;
+    my $sublex = $subparser->lexicon;
     my @args;
     for my $w (@$wants){
-        ref $w or $w = $typelex->lookup($w);
-        push @args, $subparser->next_mote($engine)->as($w)
+        $w = $sublex->lookup("${w}TYPE");
+        push @args, $subparser->next_mote($engine)->become($w);
     };
     $lookup_result->process(@args)
 }

@@ -2,6 +2,7 @@
 package TipJar::Motion::demonstration_command_line;
 
 use lib 'lib';
+use TipJar::Motion::Mote;
 use TipJar::Motion::stream;
 use TipJar::Motion::engine;
 my $input = streamify(\*STDIN);

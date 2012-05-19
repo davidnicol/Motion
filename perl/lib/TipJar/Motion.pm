@@ -6,7 +6,14 @@ this is the base package for the release version -- the reference implementation
 
 In "Motion" all objects are subclassed from the "Mote" base type
 
-In "Motion" all objects are subclassed from the "Mote" base type
+Security is provided by making mote identifiers hard to guess, and
+discipline in maintaining wet/dry membranes. Introspection is not
+available; information about use of a particular mote must be
+provided via separate documentation.
+
+The motion parser references a lexicon of tokens that map to motes,
+and only tokens appearing in the lexicon at any moment may be accessed
+by name when constructing new motes.
 
 The syntax is like assembly language, in that operators take 
 a fixed number of operands, depending on the operator
