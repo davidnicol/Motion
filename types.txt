@@ -1,0 +1,49 @@
+
+the motion types system
+
+Types, like everything else, are motes.
+
+Every mote has a type, which affects operations like so:
+
+1: arguments to sequences and other ops specify a type, and provided 
+   arguments must either match that type or have a defined conversion
+   to that type otherwise the operation fails.
+
+2: a type mote may specify a prototype type mote, as in Javascript
+   or other languages with a single-inheritance object discipline.
+
+3: Coercions are the responsibility of the type of the mote used
+   as the operand. Verification of coercion is the responsibility of
+   the desired type.
+
+In the default lexicon, which may be limited or changed in application
+environments, these are the predefined types:
+
+MOTE the base object type, the default default prototype
+
+AA "Associative Array" 
+
+LEXICON an AA with an "outer" reference, for scoping
+
+TYPE the base type type
+
+OP Operator. Consumes zero or more arguments and produces one result. Can temporarily replace the engine's parser.
+
+STREAM a stream of characters, for either reading or writing or both, a 
+   file handle.
+
+ENGINE takes two stream arguments, reads from the first, writes to the second
+
+PARSER 
+
+STRING
+
+NUMBER
+
+BOOLEAN
+
+LIST
+
+ANYTHING: a degenerate type name that accepts anything
+
+Names of types can be used as instance constructors

@@ -1,13 +1,13 @@
 
 package TipJar::Motion::configuration;
-
+# our @EXPORT = qw/accessor base_obj fresh_rowid min_age/;
 =head1 local configuration
 
 copy this file into a local library directory and
 edit it.
 
 =cut
-sub VMid {
+sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
 }
 
@@ -21,14 +21,18 @@ sub VMid {
 { my %PL;
   my $column = 0;
   $PL{motes} = {};
-  $PL{data} = {};
+  $PL{data} = [];
   sub accessor(){
        ### support inside-out objects via these
        my $unique = $column++;
        $PL{data}[$unique] = [];
        sub {
               my $mote = shift;
-              $mote->VMid eq VMid() or die "CLOUD MOTE ACCESS PROXY NEEDED";
+              unless($mote->VMid eq ourVMid()){
+                  warn "accessing $$mote with VMid ".$mote->VMid;
+                  warn "which differs from our VMid ".ourVMid();
+                  die "CLOUD MOTE ACCESS PROXY NEEDED";
+              };
               my $id = $mote->row_id;
               @_ and $PL{data}[$unique][$id] = shift;
               $PL{data}[$unique][$id]
@@ -58,11 +62,16 @@ sub VMid {
   }
 }
 
-CHECK { require TipJar::Motion::WetLexicon }
+# CHECK { require TipJar::Motion::WetLexicon }
+use TipJar::Motion::null;
+my $IL;
 sub initial_lexicon {
+     $IL and return $IL;
+     $IL = TipJar::Motion::lexicon->new;
+     $IL->lexicon(
        # matched key value pairs to be added to the default parser's lexicon
        {
-            NOTHING => sub { use TipJar::Motion::null; TipJar::Motion::null->new },
+            NOTHING => TipJar::Motion::null->new,
             #### the core types. After arranging
             #### a persistence system, add the wet lexicon
             #### to it and create dry environments
@@ -70,6 +79,8 @@ sub initial_lexicon {
             # TipJar::Motion::WetLexicon::WetLexicon()->explode, 
 
        }
+     );
+     $IL
 }
 
 { my $DummyTopRow; sub fresh_rowid{

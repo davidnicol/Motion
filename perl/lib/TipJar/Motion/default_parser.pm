@@ -1,27 +1,18 @@
 
 package TipJar::Motion::default_parser;
 use parent TipJar::Motion::Mote;
-use TipJar::Motion::type 'PARSER';
 use strict;
-{ 
-   my %L; sub lexicon{ my $P=shift; @_ and $L{$$P} = shift; $L{$$P} }
-}
-
-use TipJar::Motion::lexicon;
 use TipJar::Motion::configuration;
-{
-  my $p_lex = TipJar::Motion::lexicon->new;
-  my $i_lex = TipJar::Motion::lexicon->new;
-  $p_lex->lexicon(TipJar::Motion::configuration::persistent_lexicon);
-  $i_lex->lexicon(TipJar::Motion::configuration::initial_lexicon);
+use TipJar::Motion::type 'PARSER';
+use TipJar::Motion::lexicon;
+*lexicon = TipJar::Motion::configuration::accessor();
+
 sub init{
    my $P = shift;
    $P->lexicon(TipJar::Motion::lexicon->new)
-     ->AddLex($p_lex)
-     ->AddLex($i_lex)
+     ->AddLex(TipJar::Motion::configuration::initial_lexicon)
    ;
    $P
-}
 }
 
 =pod
@@ -63,17 +54,18 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
-    my $lexicon = $parser->lexicon;
-    my $lookup_result = $lexicon->lookup($string);
+    my $lookup_result = $parser->lexicon->lookup($string);
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
     my $wants = $lookup_result->wants2;
     @$wants or return $lookup_result;
+    # give found mote opportunity to replace the parser
     my $subparser = $lookup_result->parser($parser);
     my $sublex = $subparser->lexicon;
     my @args;
     for my $w (@$wants){
-        $w = $sublex->lookup("${w}TYPE");
-        push @args, $subparser->next_mote($engine)->become($w);
+        my $arg = $subparser->next_mote($engine)->become($w);
+        $w->accept($arg) or die "ARG TYPE MISMATCH";
+        push @args, $arg;
     };
     $lookup_result->process(@args)
 }

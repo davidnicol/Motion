@@ -89,7 +89,7 @@ sub lookup {
   my $term = shift;
   my $l = $self->lexicon;
   if(exists $l->{$term}){
-         return &{$l->{$term}}
+         return $l->{$term}
   };
   my $p = $self->outer;
   $p and $p->lookup($term)

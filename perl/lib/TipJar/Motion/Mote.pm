@@ -122,9 +122,6 @@ sub new {
 }
 
 
-INIT{
-require TipJar::Motion::VMid;
-}
 use Encode::Base32::Crockford qw(:all);
 
 =head2 NewMoteID
@@ -172,12 +169,12 @@ sub NewMoteID{
          $_ = "00000" . base32_encode_with_checksum( $_  % 1048576 );
          $_ = substr($_,-5,5);
     };
-    join '',@X,VMid()
+    join '',@X,TipJar::Motion::configuration::ourVMid()
 }}
 
 sub alpha_row_id { substr($$_[0], 10,4) }
-sub row_id { base32_decode_with_checksum( substr($$_[0], 10,5)) }
-sub VMid { substr($$_[0], -5,4) }
+sub row_id { base32_decode_with_checksum( substr(${$_[0]}, 10,5)) }
+sub VMid { substr(${$_[0]}, -5,5) }
 
 =head1 type
 the type method reveals the name Motion type, for operand validation
