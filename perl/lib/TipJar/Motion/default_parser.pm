@@ -1,9 +1,10 @@
 
 package TipJar::Motion::default_parser;
 use parent TipJar::Motion::Mote;
-use strict;
 use TipJar::Motion::configuration;
 use TipJar::Motion::type 'PARSER';
+sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->prototype } }
+use strict;
 use TipJar::Motion::lexicon;
 *lexicon = TipJar::Motion::configuration::accessor();
 

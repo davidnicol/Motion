@@ -11,7 +11,7 @@ Initially, just wrap Perl file handles, but
 leave room for motion queues.
 
 =cut
-sub type { 'STREAM' };
+use TipJar::Motion::type 'STREAM' ;
 {
   my %FH;
 sub fh{ my $s = shift; @_ and $FH{$$s} = shift; $FH{$$s} }
@@ -47,7 +47,8 @@ sub streamify{
 
 sub import{
   my $caller = caller;
-  *{$caller.'::streamify'} = \&streamify
+  *{$caller.'::streamify'} = \&streamify;
+  *{$caller.'::STREAM'} = sub () { __PACKAGE__->prototype }
 }
 
 sub nextchar{

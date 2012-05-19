@@ -2,6 +2,7 @@
 package TipJar::Motion::lexicon;
 use parent TipJar::Motion::Mote;
 use strict;
+use Carp;
 =pod
 
 A class that provides a lexicon object, supporting lookup of strings
@@ -27,7 +28,8 @@ Returns the invocant, allowing chaining.
 sub AddLex{
    my $invocant = shift;
    my $argument = shift;
-   eval { $argument->type eq 'LEXICON' } or Carp::confess("argument [$argument] is not a LEXICON mote");
+   $argument->prototype->moteid eq __PACKAGE__->prototype->moteid
+     or Carp::confess("argument [$argument] is not a LEXICON mote");
    my $outer = $invocant->outer;
    my $new = TipJar::Motion::lexicon->new;
    $new->outer($outer);
@@ -53,6 +55,8 @@ use TipJar::Motion::type 'LEXICON' ;
        $P{$$s}
   }
 }
+
+
 sub perl_arrayrefname() { ref sub {} } # this is a constant, yo
 
 =head1 AddTerms

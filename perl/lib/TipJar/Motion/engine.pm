@@ -1,21 +1,29 @@
 
 package TipJar::Motion::engine;
 use TipJar::Motion::default_parser;
+use TipJar::Motion::stream;
+use TipJar::Motion::configuration;
 use Carp;
 use parent TipJar::Motion::Mote;
-{ # inside-out object
-my %INPUT; sub input{my $s=shift; @_ and $INPUT{$$s} = shift; $INPUT{$$s}}
-my %OUTPUT; sub output{my $s=shift; @_ and $OUTPUT{$$s} = shift; $OUTPUT{$$s}}
-my %PARSER; sub parser{my $s=shift; @_ and $PARSER{$$s} = shift; $PARSER{$$s}}
-my %FAILURE; sub failure{my $s=shift; @_ and $FAILURE{$$s} = shift; $FAILURE{$$s}}
-}
+## { # inside-out object
+## my %INPUT; sub input{my $s=shift; @_ and $INPUT{$$s} = shift; $INPUT{$$s}}
+## my %OUTPUT; sub output{my $s=shift; @_ and $OUTPUT{$$s} = shift; $OUTPUT{$$s}}
+## my %PARSER; sub parser{my $s=shift; @_ and $PARSER{$$s} = shift; $PARSER{$$s}}
+## my %FAILURE; sub failure{my $s=shift; @_ and $FAILURE{$$s} = shift; $FAILURE{$$s}}
+## }
+*input = accessor();
+*output = accessor();
+*parser= accessor();
+*failure = accessor();
 sub type { 'ENGINE' }
-sub wants { [qw/STREAM STREAM/] }
+sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->prototype } }
+
+sub wants { [STREAM, STREAM, PARSER] }
 sub init{
     my $self = shift;
     $self->input(shift);
     $self->output(shift);
-    $self->parser(TipJar::Motion::default_parser->new);
+    $self->parser(shift);
     $self->failure('');
     $self
 }

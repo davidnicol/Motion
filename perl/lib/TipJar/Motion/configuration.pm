@@ -1,6 +1,5 @@
 
 package TipJar::Motion::configuration;
-# our @EXPORT = qw/accessor base_obj fresh_rowid min_age/;
 =head1 local configuration
 
 copy this file into a local library directory and
@@ -40,7 +39,7 @@ sub ourVMid {
   };
   # use something
   # tie %PL, something => ...
-  sub persistent_lexicon { $PL{motes} ||= {} } 
+  sub persistent_AA { $PL{motes} ||= {} } 
   sub sponsortable { $PL{sponsorships} ||= {} }
 
 ### to make all motes blessed references to
@@ -62,8 +61,14 @@ sub ourVMid {
   }
 }
 
-# CHECK { require TipJar::Motion::WetLexicon }
 use TipJar::Motion::null;
+my $PL_lex;
+sub persistent_lexicon {
+    $PL_lex and return $PL_lex;
+    $PL_lex = TipJar::Motion::lexicon->new;
+    $PL_lex->lexicon(persistent_AA);
+    $PL_lex
+};
 my $IL;
 sub initial_lexicon {
      $IL and return $IL;
@@ -80,17 +85,21 @@ sub initial_lexicon {
 
        }
      );
+     $IL->outer(persistent_lexicon);
      $IL
 }
-
 { my $DummyTopRow; sub fresh_rowid{
    ++$DummyTopRow
 } }
+use TipJar::Motion::lexicon;
 
 ### the time an unspponsored mote is allowed to persist;
 ### ths wait between garbage collections
 ### in seconds
 sub min_age() { 37 }
 
-
+sub import{
+   no strict 'refs';
+   *{caller().'::accessor'} = \&accessor
+}
 1;

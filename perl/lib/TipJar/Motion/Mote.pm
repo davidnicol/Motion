@@ -1,8 +1,8 @@
 
 package TipJar::Motion::Mote;
 use strict;
-use TipJar::Motion::configuration;
-sub type {'BASE'}
+use Carp;
+require TipJar::Motion::configuration;
 =head1 base class
 
 everything, absolutely everything, in Motion
@@ -114,13 +114,30 @@ sub new {
     my $mote = TipJar::Motion::configuration::base_obj(NewMoteID());
     my $new = bless $mote, $pack;
     my $wants = $new->wants;
-    @$wants == @_ or die "OP COUNT MISMATCH\n";
-    my $argtypes = [ map { $_->type } @_ ];
-    "@$wants" eq "@$argtypes" or die "OP MISMATCH\n";
+    @$wants == @_ or Carp::confess "OP COUNT MISMATCH\n";
+    my @args;
+    for my $w (@$wants){
+        my $arg = shift ->become($w) ;
+        $w->accept($arg) or die "ARG TYPE MISMATCH";
+        push @args, $arg;
+    };
 
-    $new->init(@_);
+    $new->init(@args);
 }
 
+sub accept {
+   my $selector = shift;  # this is a prototype
+   my $candidate = shift; # this is not
+   $selector->moteid eq $candidate->prototype->moteid and return $candidate;
+   Carp::confess $selector->prototype . " can't accept " . $candidate->prototype ;
+};
+
+sub become {
+   my $me = shift;    # this is not a prototype
+   my $goal = shift;  # this is already a prototype
+   $me->prototype->moteid eq $goal->moteid and return $me;
+   Carp::confess $me->prototype . " can't become " . $goal->prototype ;
+};
 
 use Encode::Base32::Crockford qw(:all);
 
@@ -215,6 +232,8 @@ which the engine writes to its output.
 Base motes yield the results of their asSTRING functions.
 =cut
 sub yield_returnable { $_[0]->as('STRING')->string }
+
+use TipJar::Motion::type 'MOTE';
 
 use TipJar::Motion::Sponsortable;
 sub sponsor { 

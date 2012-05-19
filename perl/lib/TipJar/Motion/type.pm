@@ -13,11 +13,15 @@ sub import{
   # try to look up the prototype in persistent storage
   # if not found, mint one
   my $prototype =
-        TipJar::Motion::configuration::persistent_lexicon()->{$typename.'TYPE'}
-             ||= TipJar::Motion::Mote->new;
+        TipJar::Motion::configuration::persistent_AA()->{$typename}
+             ||= __PACKAGE__->new;
 
   { no strict 'refs';
-  *{"$$prototype\::"} = *{"$caller\::"};
+### no, don't do this; it uses too much perl
+### but it lets us treat MOTE type names as packages,
+### most convenient.
+  *{"$typename\::"} = *{"$caller\::"};
+
   *{$caller.'::type'} = sub { $typename };
   *{$caller.'::prototype'} = sub { $prototype };
   }
@@ -35,11 +39,6 @@ is hard-coded.
 
 =cut
 
-sub asSTRING {
-   my $id = $$_[0];
-   $id =~ s/[^A-Z0-9]//g;
-   $id
-}
 
 =head1 constructor
 
@@ -75,8 +74,9 @@ read in from the database instead of C<use>d
 When absent, we will C<require> the PACKAGE.
 
 =cut
-sub wants { 'LEXICON' }
-sub init {
+sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
+sub process {
     my ($self, $lexarg) = @_;
+    die 'FIXME'
 };
 1;
