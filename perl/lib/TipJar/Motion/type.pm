@@ -30,13 +30,16 @@ sub import{
 __PACKAGE__->import( 'TYPE' );
 
 =pod
-this package declares C<type> methods in callers when used 
+this package declares C<type> and C<prototype> methods in callers when used 
 with an argument.
 
-types are motes. The core types all appear in the "wet" lexicon as
-English words, ending in 'TYPE.' At this release the suffic "TYPE"
-is hard-coded.
+It also aliases a package with the providedd argument to the caller's
+package, which might go away.
 
+types are motes. The core types all appear in the persistent lexicon as
+the provided names.
+
+The provided name for this package is 'TYPE';
 =cut
 
 
@@ -47,7 +50,7 @@ from which the various options will be pulled. Options include
 
 =head2 PROTOTYPE
 
-what type we singly inherit from, as in Javascript. Defaults to MOTETYPE
+what type we singly inherit from, as in Javascript. Defaults to MOTE
 
 =head2 CONSTRUCTORARGS
 
@@ -76,7 +79,8 @@ When absent, we will C<require> the PACKAGE.
 =cut
 sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
 sub process {
-    my ($self, $lexarg) = @_;
+    my ($parser,$self, $lexarg) = @_;
+    my $prototype = $lexarg->lookup('PROTOTYPE') || $parser->lexicon->lookup('MOTE');
     die 'FIXME'
 };
 1;

@@ -45,20 +45,7 @@ sub wants {[]}
 sub wants2 {[]}
 sub process { $_[0] }
 sub parser { $_[1] }
-sub as {
-   my $m = shift;
-   my $m_type = $m->type;
-   my $goal_type = shift;
-   $m_type eq $goal_type and return $m;
-   $goal_type or die "FALSE TYPE\n";
-   my $test = eval { 
-          my $coercionmethod = 'as'.$goal_type;
-          $m->$coercionmethod 
-   };
-   $test or die "COERCION FROM $m_type TO $goal_type NOT DEFINED\n";
-   $test
-};
-=head2 as
+=head2 become
 Coerce the invocant to the type named as the argument.
 
 Base motes have one coercion defined, to STRING type,
@@ -118,7 +105,7 @@ sub new {
     my @args;
     for my $w (@$wants){
         my $arg = shift ->become($w) ;
-        $w->accept($arg) or die "ARG TYPE MISMATCH";
+        $arg = $w->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
     };
 
@@ -136,7 +123,10 @@ sub become {
    my $me = shift;    # this is not a prototype
    my $goal = shift;  # this is already a prototype
    $me->prototype->moteid eq $goal->moteid and return $me;
-   Carp::confess $me->prototype . " can't become " . $goal->prototype ;
+   $goal->moteid eq STRING->moteid and return $me->asSTRING;
+
+   # maybe the goal can take me as I am
+   $me
 };
 
 use Encode::Base32::Crockford qw(:all);

@@ -68,6 +68,6 @@ sub next_mote{
         $w->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
     };
-    $lookup_result->process(@args)
+    $lookup_result->process($parser,@args)
 }
 1;

@@ -1,8 +1,18 @@
 
+
+use TipJar::Motion::codeloader;
+my $nothing_code = codeload <<'ENDCODE';
+
 package TipJar::Motion::null;
 use parent TipJar::Motion::Mote;
 use strict;
-sub type { 'NULL' };
+use TipJar::Motion::type 'NOTHING';
+sub yield_returnable { undef }
+
+ENDCODE
+
+sub TipJar::Motion::null::freezecode { $nothing_code }
+
 =pod
 
 A class that provides an object that does
@@ -15,5 +25,4 @@ empty string
 
 =cut
 
-sub yield_returnable { undef }
 1;

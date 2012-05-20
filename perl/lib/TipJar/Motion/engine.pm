@@ -38,7 +38,7 @@ there is more to read from the input stream.
 =cut
 
 sub process{
-    my $self = shift;
+    my ($self,$parser) = splice @_, 0, 2;
     @_ and carp "process method called with args";
     my $input = $self->input;
     my $output = $self->output;
