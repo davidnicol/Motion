@@ -62,6 +62,7 @@ sub ourVMid {
 }
 
 use TipJar::Motion::null;
+use TipJar::Motion::string;
 my $PL_lex;
 sub persistent_lexicon {
     $PL_lex and return $PL_lex;

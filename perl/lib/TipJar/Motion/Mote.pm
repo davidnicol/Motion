@@ -129,6 +129,17 @@ sub become {
    $me
 };
 
+=head2 freezecode
+provide a block of implementation-langauge code that can
+be evaluated (for primitives and adapters, that's string-eval;
+higher-level application code will still be string-eval, but
+making reference to a new engine, and a facility for turning
+a heredoc into a STREAM)
+
+Base objects don't need this. User-defined types do.
+=cut
+sub freezecode { '' } 
+
 use Encode::Base32::Crockford qw(:all);
 
 =head2 NewMoteID

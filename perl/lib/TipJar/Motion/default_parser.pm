@@ -61,7 +61,6 @@ sub next_mote{
     @$wants or return $lookup_result;
     # give found mote opportunity to replace the parser
     my $subparser = $lookup_result->parser($parser);
-    my $sublex = $subparser->lexicon;
     my @args;
     for my $w (@$wants){
         my $arg = $subparser->next_mote($engine)->become($w);

@@ -95,6 +95,7 @@ sub lookup {
   if(exists $l->{$term}){
          return $l->{$term}
   };
+  warn "failed to fine [$term] among [@{[sort keys %$l]}]";
   my $p = $self->outer;
   $p and $p->lookup($term)
 }
