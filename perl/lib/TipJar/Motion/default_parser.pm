@@ -7,12 +7,15 @@ sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->prototype } }
 use strict;
 use TipJar::Motion::lexicon;
 *lexicon = TipJar::Motion::configuration::accessor();
+*prepend = TipJar::Motion::configuration::accessor();
 
 sub init{
    my $P = shift;
    $P->lexicon(TipJar::Motion::lexicon->new)
      ->AddLex(TipJar::Motion::configuration::initial_lexicon)
+  #   ->AddLex(TipJar::Motion::configuration::permanent_lexicon)
    ;
+   $P->prepend([]);
    $P
 }
 
@@ -39,9 +42,15 @@ By default, the parser reads a series of Crockford characters
 (since that's what's in mote IDs) before consulting the lexicon.
 =cut
 
+
 sub next_mote{
     my $parser = shift;
     my $engine = shift;
+    my $lookup_result;
+    my $prepend = $parser->prepend;
+   if (@$prepend){
+         $lookup_result = shift @$prepend
+   }else{
     my $c;
     my $string = '';
     while(defined ($c = uc $engine->input->nextchar)){
@@ -55,18 +64,21 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
-    my $lookup_result = $parser->lexicon->lookup($string);
+    $lookup_result = $parser->lexicon->lookup($string);
+   };
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
     my $wants = $lookup_result->wants2;
-    @$wants or return $lookup_result;
+    my @args;
+    if(@$wants){
     # give found mote opportunity to replace the parser
     my $subparser = $lookup_result->parser($parser);
-    my @args;
     for my $w (@$wants){
         my $arg = $subparser->next_mote($engine)->become($w);
         $w->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
     };
-    $lookup_result->process($parser,@args)
+    };
+    unshift @$prepend, $lookup_result->process($parser,@args);
+    shift @$prepend
 }
 1;

@@ -1,0 +1,34 @@
+
+
+Here's how it works:
+
+an ENGINE mote holds references to an input stream, an output stream,
+and a PARSER.
+
+The engine passes itself to its parser.
+
+The parser reads as much as is required from the input stream,
+recursively, until it has a mote to return.
+
+The parser returns the mote.
+
+The engine queries the mote as to what string it would return
+as a result, and writes that string to the output stream, then
+a newline.
+
+The default PARSER mote skips whitespace, constructs a token
+from non-whitespace, and tries to look that up in its lexicon.
+If the token is not found, the parser fails, and the engine fails too.
+
+otherwise, the parser asks the lookup result for the list of types
+of its arguments.
+
+When the list has one or more arguments, the parser asks the lookup result
+what parser to use for collecting those arguments from the input stream.
+
+The parser uses the subparser to collect motes to satisfy the argument
+specification, then asks the lookup result to process the argument list.
+
+The result of the processing is returned to the engine.
+
+
