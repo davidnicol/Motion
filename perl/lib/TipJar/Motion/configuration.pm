@@ -99,6 +99,7 @@ sub initial_lexicon {
      $IL->outer(persistent_lexicon);
      $IL
 }
+sub initial_AA { initial_lexicon->lexicon }
 { my $DummyTopRow; sub fresh_rowid{
    ++$DummyTopRow
 } }

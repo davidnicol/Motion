@@ -3,18 +3,22 @@ package TipJar::Motion::type;
 use parent TipJar::Motion::Mote;
 use strict;
 use TipJar::Motion::configuration;
+sub protopackage{
+     my %args = @_;
+     $args{ISA}
+};
 sub import{
   my $caller = caller;
   my $pack = shift;
   my $typename = shift;
   $typename or die "import called with no argument";
-  @_ and die "import called with extra arguments";
-
+  my $Protopackage = @_ ?  protopackage(@_) : __PACKAGE__;
+               
   # try to look up the prototype in persistent storage
   # if not found, mint one
   my $prototype =
-        TipJar::Motion::configuration::persistent_AA()->{$typename}
-             ||= __PACKAGE__->new;
+        TipJar::Motion::configuration::initial_AA()->{$typename}
+             ||= $caller->new;
 warn "adding type and prototype to package [$caller]";
   { no strict 'refs';
 ### no, don't do this; it uses too much perl
@@ -77,7 +81,8 @@ read in from the database instead of C<use>d
 When absent, we will C<require> the PACKAGE.
 
 =cut
-sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
+# sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
+sub wants2 { [TipJar::Motion::lexicon->prototype] }   # as an OP, it takes a lexicon.
 sub process {
     my ($parser,$self, $lexarg) = @_;
     my $prototype = $lexarg->lookup('PROTOTYPE') || $parser->lexicon->lookup('MOTE');

@@ -68,12 +68,14 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
+       warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
    };
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
     my $wants = $lookup_result->wants2;
     my @args;
     if(@$wants){
+        warn "WANTS2: [@$wants]";
     # give found mote opportunity to replace the parser
     my $subparser = $lookup_result->parser($parser);
     for my $w (@$wants){
@@ -83,6 +85,7 @@ sub next_mote{
     };
     };
     unshift @$prepend, $lookup_result->process($parser,@args);
+    warn "parser output list: [@$prepend]";
     shift @$prepend
 }
 1;

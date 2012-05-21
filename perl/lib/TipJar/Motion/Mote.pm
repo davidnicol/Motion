@@ -115,14 +115,20 @@ sub new {
 sub accept {
    my $selector = shift;  # this is a prototype
    my $candidate = shift; # this is not
-   $selector->moteid eq $candidate->prototype->moteid and return $candidate;
-   Carp::confess $selector->prototype . " can't accept " . $candidate->prototype ;
+   warn "selextor: $selector candidate: $candidate";
+   eval {
+     $selector->moteid eq $candidate->prototype->moteid
+   }  and return $candidate;
+   Carp::confess " $selector can't accept $candidate: $@" ;
 };
 
 sub become {
    my $me = shift;    # this is not a prototype
    my $goal = shift;  # this is already a prototype
-   $me->prototype->moteid eq $goal->moteid and return $me;
+eval {
+   $me->prototype->moteid eq $goal->moteid
+} and return $me;
+$@ and Carp::confess $@;
    $goal->moteid eq STRING->moteid and return $me->asSTRING;
 
    # maybe the goal can take me as I am
@@ -223,7 +229,11 @@ twenty bit numbers.
 Base motes reveal their own moteids.
 =cut
 
-sub moteid { ${$_[0]} }
+sub moteid { my $M = eval {${$_[0]}};
+   $M and return $M;
+   Carp::confess($@)
+
+ }
 
 =head1 yield_returnable
 

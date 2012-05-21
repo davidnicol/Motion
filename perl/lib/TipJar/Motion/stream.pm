@@ -57,5 +57,11 @@ sub nextchar{
   read($self->fh, $c, 1);
   $c
 };
+sub enqueue{
+   my $self = shift;
+   while (@_){
+       print { $self->fh } shift
+   }
+}
 
 1;
