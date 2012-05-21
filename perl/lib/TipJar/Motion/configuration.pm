@@ -39,7 +39,8 @@ sub ourVMid {
   };
   # use something
   # tie %PL, something => ...
-  sub persistent_AA { $PL{motes} ||= {} } 
+  our %PAA;
+  sub persistent_AA { $PL{motes} ||= \%PAA } 
   sub sponsortable { $PL{sponsorships} ||= {} }
 
 ### to make all motes blessed references to
@@ -60,9 +61,12 @@ sub ourVMid {
                    }
   }
 }
-
+INIT { eval <<\abcde or die $@ }
 use TipJar::Motion::null;
 use TipJar::Motion::string;
+BEGIN { warn "just used STRING; got ".STRING()} 1
+abcde
+;
 my $PL_lex;
 sub persistent_lexicon {
     $PL_lex and return $PL_lex;
@@ -77,7 +81,13 @@ sub initial_lexicon {
      $IL->lexicon(
        # matched key value pairs to be added to the default parser's lexicon
        {
-            NOTHING => TipJar::Motion::null->new,
+            ### core types are now added to the persistent
+            ### lexicon by type's import function, and no longer
+            ### need be listed here. This may change with
+            ### addition or persistence to this rewrite.
+
+            ### NOTHING => TipJar::Motion::null->new,
+
             #### the core types. After arranging
             #### a persistence system, add the wet lexicon
             #### to it and create dry environments

@@ -15,7 +15,7 @@ sub import{
   my $prototype =
         TipJar::Motion::configuration::persistent_AA()->{$typename}
              ||= __PACKAGE__->new;
-
+warn "adding type and prototype to package [$caller]";
   { no strict 'refs';
 ### no, don't do this; it uses too much perl
 ### but it lets us treat MOTE type names as packages,

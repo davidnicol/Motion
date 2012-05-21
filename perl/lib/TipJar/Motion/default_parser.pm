@@ -12,8 +12,12 @@ use TipJar::Motion::lexicon;
 sub init{
    my $P = shift;
    $P->lexicon(TipJar::Motion::lexicon->new)
+# AddLex ads a copy of the named lexicon into the
+# invocant's outer chain. It does not add the operand's outers too.
+# each new one pushes the others farther out, so list them
+# from the outside in.
+     ->AddLex(TipJar::Motion::configuration::persistent_lexicon)
      ->AddLex(TipJar::Motion::configuration::initial_lexicon)
-  #   ->AddLex(TipJar::Motion::configuration::permanent_lexicon)
    ;
    $P->prepend([]);
    $P
