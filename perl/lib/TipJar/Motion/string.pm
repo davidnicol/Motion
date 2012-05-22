@@ -1,3 +1,9 @@
+
+package TipJar::Motion::stringliteral;
+our @ISA = qw/TipJar::Motion::string/;
+sub wants2 {[]}
+sub process {$_[0]}
+
 package TipJar::Motion::string;
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'STRING';
@@ -32,7 +38,8 @@ sub next_mote{
     
      my $c;
      my $string = '';
-     while(defined ($c = uc $engine->input->nextchar)){
+     # "defined" won't work because (uc undef) is '' not undef
+     while(length ($c = uc $engine->input->nextchar)){
          # warn "string: [$string]";
          if($c =~ /\s/){
             length $string and last;
@@ -40,7 +47,7 @@ sub next_mote{
             $string .= $c;
          };
      };
-     my $S = TipJar::Motion::string->new;
+     my $S = TipJar::Motion::stringliteral->new;
      $S->string($string);
 
    $S

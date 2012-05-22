@@ -60,7 +60,7 @@ sub nextchar{
 sub enqueue{
    my $self = shift;
    while (@_){
-       print { $self->fh } shift
+       print { $self->fh } shift,"\n"
    }
 }
 

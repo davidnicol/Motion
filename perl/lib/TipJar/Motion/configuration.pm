@@ -75,6 +75,8 @@ INIT { eval <<\abcde or die $@ }
 use TipJar::Motion::null;
 use TipJar::Motion::string;
 use TipJar::Motion::workspace;
+use TipJar::Motion::anything;
+use TipJar::Motion::name;
 1
 abcde
 ;

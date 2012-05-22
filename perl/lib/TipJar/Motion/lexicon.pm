@@ -63,7 +63,6 @@ Returns the invocant, allowing chaining. See also L<AddLex>.
 sub AddTerms{
   my $self = shift;
   while (my($k,$v) = splice @_,0,2){
-     ref $v eq perl_arrayrefname or die "MISFORMATTED LEXICON VALUE";
      $self->lexicon->{"$k"} = $v
   };
   $self
