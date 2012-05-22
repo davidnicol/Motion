@@ -86,8 +86,16 @@ sub lookup {
   if(exists $l->{$term}){
          return $l->{$term}
   };
-  # warn "failed to fine [$term] among [@{[sort keys %$l]}]";
+  # warn "failed to find [$term] among [@{[sort keys %$l]}]";
   my $p = $self->outer;
   $p and $p->lookup($term)
 }
+# processing this mote yields a fresh lexicon (or lexicon-like type)
+# making this a constructor mote
+# design question: should we move this into a
+# general purpose ::::constructormote alternate base class?
+sub process{ shift->new }
 1;
+
+
+

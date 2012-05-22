@@ -76,10 +76,11 @@ sub next_mote{
 #      eval { warn "found $lookup_result $$lookup_result"};
     my $wants = $lookup_result->wants2;
     my @args;
-    if(@$wants){
         # warn "WANTS2: [@$wants]";
     # give found mote opportunity to replace the parser
+    # even if we don't need args
     my $subparser = $lookup_result->parser($parser);
+    if(@$wants){
     for my $w (@$wants){
         my $arg = $subparser->next_mote($engine)->become($w);
         $w->accept($arg) or die "ARG TYPE MISMATCH";

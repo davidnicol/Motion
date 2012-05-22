@@ -14,7 +14,7 @@ sub import{
   # if not found, mint one
   my $type = __PACKAGE__->new;
   $type->implementationpackage($caller);
-  TipJar::Motion::configuration::initial_AA()->{$typename} = $caller;
+  TipJar::Motion::configuration::initial_AA()->{$typename} = $caller->new;
   { no strict 'refs';
 ### no, don't do this; it uses too much perl
 ### but it lets us treat MOTE type names as packages,

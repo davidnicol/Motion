@@ -241,9 +241,9 @@ sub moteid { my $M = eval {${$_[0]}};
 the yield_returnable method provides a character string
 which the engine writes to its output.
 
-Base motes yield the results of their asSTRING functions.
+Base motes yield their mote IDs.
 =cut
-sub yield_returnable { $_[0]->as('STRING')->string }
+sub yield_returnable { ${$_[0]} }
 
 use TipJar::Motion::type 'MOTE';
 

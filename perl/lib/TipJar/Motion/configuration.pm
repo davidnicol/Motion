@@ -74,7 +74,7 @@ INIT{depersistify}; # load persistent data before any other INIT blocks
 INIT { eval <<\abcde or die $@ }
 use TipJar::Motion::null;
 use TipJar::Motion::string;
-# BEGIN { warn "just used STRING; got ".STRING()}
+use TipJar::Motion::workspace;
 1
 abcde
 ;
