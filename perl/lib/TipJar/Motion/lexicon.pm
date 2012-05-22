@@ -39,22 +39,13 @@ sub AddLex{
 }
 
 use TipJar::Motion::type 'LEXICON' ;
+use TipJar::Motion::configuration ;
 
-
-{
-  my %L; sub lexicon{
-       my $s = shift; @_ and $L{$$s} = shift; $L{$$s}
-  }
-  my %P; sub outer{
-       my $s = shift;
-       if (defined $_[0]){
-          my $newval = shift;
-          !ref $newval and Carp::confess "non hash set as outer";
-          $P{$$s} = $newval;
-       };
-       $P{$$s}
-  }
+BEGIN{
+*lexicon = TipJar::Motion::configuration::accessor;
+*outer = TipJar::Motion::configuration::accessor;
 }
+
 
 
 sub perl_arrayrefname() { ref sub {} } # this is a constant, yo

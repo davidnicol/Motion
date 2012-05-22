@@ -10,6 +10,12 @@ sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
 }
 
+sub persistify; # defined at bottom
+sub depersistify(); # defined at bottom
+INIT{depersistify}; # load persistent data before any other INIT blocks
+
+
+
 ### edit this to tie %PL into a persistence infrastructure
 ### capable of holding perl objects and their types
 ### and sponsorship relationships for GC.
@@ -18,29 +24,34 @@ sub ourVMid {
 ### layer (which the author has, from the previous draft,
 ### but doesn't want to release yet.)
 { my %PL;
-  my $column = 0;
-  $PL{motes} = {};
-  $PL{data} = [];
+  persistify \%PL, ;
+  $PL{motes} ||= {};
+  sub OldMote($){$PL{motes}{$_[0]}}
+  $PL{data} ||= [];
   sub accessor(){
+       $callr =join ':', (caller)[1,2] ;
        ### support inside-out objects via these
-       my $unique = $column++;
-       $PL{data}[$unique] = [];
+       my $unique = $$PL{callrz}{$callr} ||= $$PL{column}++;
+       $PL{data}[$unique] = {};
        sub {
               my $mote = shift;
+              $PL{motes}{$mote->moteid} = $mote;
               unless($mote->VMid eq ourVMid()){
                   warn "accessing $$mote with VMid ".$mote->VMid;
                   warn "which differs from our VMid ".ourVMid();
                   die "CLOUD MOTE ACCESS PROXY NEEDED";
               };
               my $id = $mote->row_id;
-              @_ and $PL{data}[$unique][$id] = shift;
-              $PL{data}[$unique][$id]
+              @_ and $PL{data}[$unique]{$id} = shift;
+              $PL{data}[$unique]{$id}
        }
   };
   # use something
-  # tie %PL, something => ...
+  # tie %PAA, something => ...
   our %PAA;
   sub persistent_AA { $PL{motes} ||= \%PAA } 
+  # this will be its own database table
+  # with two indexed columns and an expiration column
   sub sponsortable { $PL{sponsorships} ||= {} }
 
 ### to make all motes blessed references to
@@ -51,8 +62,7 @@ sub ourVMid {
   sub base_obj($) {
     my $scalar = shift;
     exists $PL{motes}{$scalar} and Carp::confess( "ATTEMPTED REUSE OF MOTE-ID [$scalar]");
-    $PL{motes}{$scalar} = [];
-    \$scalar
+    $PL{motes}{$scalar} = bless \$scalar, $scalar;
   }
   sub generation { if (@_){
                      $PL{generation} = shift
@@ -69,6 +79,7 @@ use TipJar::Motion::string;
 abcde
 ;
 my $PL_lex;
+persistify(\$PL_lex);
 sub persistent_lexicon {
     $PL_lex and return $PL_lex;
     $PL_lex = TipJar::Motion::lexicon->new;
@@ -76,6 +87,7 @@ sub persistent_lexicon {
     $PL_lex
 };
 my $IL;
+persistify(\$IL);
 sub initial_lexicon {
      $IL and return $IL;
      $IL = TipJar::Motion::lexicon->new;
@@ -113,6 +125,50 @@ sub min_age() { 37 }
 
 sub import{
    no strict 'refs';
-   *{caller().'::accessor'} = \&accessor
+   *{caller().'::OldMote'} = \&OldMote;
+   *{caller().'::accessor'} = \&accessor;
+}
+# register variable reference as a persistence key
+my @Persistents;
+my $MARKER = 'MARKER';
+BEGIN{ $MARKER = 'MARKER'};
+sub persistify{
+    warn "marker is $MARKER";
+    push @Persistents, @_, $MARKER++;
+    
+}
+END{
+   use Data::Dumper;
+   $Data::Dumper::Purity = 1;
+   $Data::Dumper::Sortkeys = 1;  # minimize diffs between runs
+   open P, '>', "PERSISTENT_DATA" or warn "could not open p-file: $!";
+   print P Dumper(\@Persistents);
+}
+sub depersistify(){
+   unless (open P, '<', "PERSISTENT_DATA"){
+       warn "persistent data file absent";
+       return
+   };
+   my $P = eval join '', '{ my ',<P>, ';$VAR1}';
+   close P;
+   for ( @Persistents ){
+       my $this = shift @$P;
+       defined $this or die "persistence underflow";
+       # markers
+       if (!ref $_){
+           $_ eq $this or die "marker mismatch: [$_] ne [$this]";
+           warn "read  marker $_";
+       }elsif( ref $_ eq 'HASH' ){
+           %$_ = %$this
+       }elsif( ref $_ eq 'REF' ){
+           $$_ = $$this
+       }elsif( ref $_ eq 'SCALAR' ){
+           $$_ = $$this
+       }elsif( ref $_ eq 'ARRAY' ){
+           @$_ = @$this
+       }else{
+           die "don't know how to depersistify $_";
+       };
+   }
 }
 1;

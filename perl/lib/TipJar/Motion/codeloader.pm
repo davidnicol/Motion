@@ -11,7 +11,7 @@ the database instad of in @INC
 sub codeload($){
    my $code = shift;
    eval "$code";
-   $@ and die "SYNTAX ERROR\n";
+   $@ and die "SYNTAX ERROR:$@\nin\n$code\n";
    $code
 };
 

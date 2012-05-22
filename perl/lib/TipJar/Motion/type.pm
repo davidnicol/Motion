@@ -3,6 +3,7 @@ package TipJar::Motion::type;
 use parent TipJar::Motion::Mote;
 use strict;
 use TipJar::Motion::configuration;
+BEGIN { *implementationpackage = accessor }
 sub import{
   my $caller = caller;
   my $pack = shift;
@@ -12,6 +13,7 @@ sub import{
   # try to look up the prototype in persistent storage
   # if not found, mint one
   my $type = __PACKAGE__->new;
+  $type->implementationpackage($caller);
   TipJar::Motion::configuration::initial_AA()->{$typename} = $caller;
   { no strict 'refs';
 ### no, don't do this; it uses too much perl
