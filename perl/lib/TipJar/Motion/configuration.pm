@@ -64,7 +64,8 @@ sub ourVMid {
 INIT { eval <<\abcde or die $@ }
 use TipJar::Motion::null;
 use TipJar::Motion::string;
-BEGIN { warn "just used STRING; got ".STRING()} 1
+# BEGIN { warn "just used STRING; got ".STRING()}
+1
 abcde
 ;
 my $PL_lex;

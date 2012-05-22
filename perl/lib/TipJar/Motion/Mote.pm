@@ -113,20 +113,21 @@ sub new {
 }
 
 sub accept {
-   my $selector = shift;  # this is a prototype
+   my $selector = shift;  # this is a type
    my $candidate = shift; # this is not
-   warn "selextor: $selector candidate: $candidate";
+   # warn "selextor: $selector candidate: $candidate";
+   # warn " candidatetype: ".$candidate->type;
    eval {
-     $selector->moteid eq $candidate->prototype->moteid
+     $selector->moteid eq $candidate->type->moteid
    }  and return $candidate;
    Carp::confess " $selector can't accept $candidate: $@" ;
 };
 
 sub become {
-   my $me = shift;    # this is not a prototype
-   my $goal = shift;  # this is already a prototype
+   my $me = shift;    # this is not a type
+   my $goal = shift;  # this is a type
 eval {
-   $me->prototype->moteid eq $goal->moteid
+   $me->type->moteid eq $goal->moteid
 } and return $me;
 $@ and Carp::confess $@;
    $goal->moteid eq STRING->moteid and return $me->asSTRING;

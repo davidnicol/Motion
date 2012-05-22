@@ -15,8 +15,8 @@ use parent TipJar::Motion::Mote;
 *output = accessor();
 *parser= accessor();
 *failure = accessor();
-sub type { 'ENGINE' }
-sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->prototype } }
+use TipJar::Motion::type  'ENGINE' ;
+sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->type } }
 
 sub wants { [STREAM, STREAM, PARSER] }
 sub init{

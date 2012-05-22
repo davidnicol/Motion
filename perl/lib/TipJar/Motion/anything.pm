@@ -4,7 +4,7 @@ use parent TipJar::Motion::Mote;
 use strict;
 use TipJar::Motion::type 'ANYTHING';
 
-sub import  { *{caller().'::ANYTHING'} = sub () { __PACKAGE__->prototype } }
+sub import  { *{caller().'::ANYTHING'} = sub () { __PACKAGE__->type } }
 
 
 =pod

@@ -28,7 +28,7 @@ Returns the invocant, allowing chaining.
 sub AddLex{
    my $invocant = shift;
    my $argument = shift;
-   $argument->prototype->moteid eq __PACKAGE__->prototype->moteid
+   $argument->type->moteid eq __PACKAGE__->type->moteid
      or Carp::confess("argument [$argument] is not a LEXICON mote");
    my $outer = $invocant->outer;
    my $new = TipJar::Motion::lexicon->new;
@@ -95,7 +95,7 @@ sub lookup {
   if(exists $l->{$term}){
          return $l->{$term}
   };
-  warn "failed to fine [$term] among [@{[sort keys %$l]}]";
+  # warn "failed to fine [$term] among [@{[sort keys %$l]}]";
   my $p = $self->outer;
   $p and $p->lookup($term)
 }

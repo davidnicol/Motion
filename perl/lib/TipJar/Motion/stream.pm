@@ -48,7 +48,7 @@ sub streamify{
 sub import{
   my $caller = caller;
   *{$caller.'::streamify'} = \&streamify;
-  *{$caller.'::STREAM'} = sub () { __PACKAGE__->prototype }
+  *{$caller.'::STREAM'} = sub () { __PACKAGE__->type }
 }
 
 sub nextchar{

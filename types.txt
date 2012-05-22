@@ -3,18 +3,21 @@ the motion types system
 
 Types, like everything else, are motes.
 
-Every mote has a type, which affects operations like so:
+Every mote has both a type and a prototype.
 
-1: arguments to sequences and other ops specify a type, and provided 
-   arguments must either match that type or have a defined conversion
-   to that type otherwise the operation fails.
+The type is a TYPE mote which is used for coercion and argument filtering.
+The prototype is the perl package name of the type, for use in method
+resolution and inheritance.
 
-2: a type mote may specify a prototype type mote, as in Javascript
-   or other languages with a single-inheritance object discipline.
+At coercion time, both the mote and the type have a chance to do coercion.
 
-3: Coercions are the responsibility of the type of the mote used
-   as the operand. Verification of coercion is the responsibility of
-   the desired type.
+The operand goes first, with the ->become(TYPE) method. Then the
+type must ->accept the result of the ->become operation. 
+
+Arguments to sequences and other ops specify a type, and provided 
+arguments must either match that type or have a defined conversion
+to that type otherwise the operation fails.
+
 
 In the default lexicon, which may be limited or changed in application
 environments, these are the predefined types:
@@ -46,4 +49,8 @@ LIST
 
 ANYTHING: a degenerate type name that accepts anything
 
-Names of types can be used as instance constructors
+Names of types can be used as instance constructors, or as constants,
+or as operators, depending on the definition of the type.
+
+The final step before an engine writes to the output stream could
+be considered a conversion to an implicit ephemeral stream-of-characters type.

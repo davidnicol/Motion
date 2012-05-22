@@ -1,0 +1,16 @@
+
+Features of Motion for comparison and contrast with other languages
+
+
+simple LL grammar
+
+strict separation of things and their names, allowing easy
+translation into other languages, and security by forgetting names; one could call this "ephemeral binding"
+
+single-parent inheritance model
+
+transparent persistence and ephemerance
+
+balance between compile-time and process time resolution and coercion
+
+

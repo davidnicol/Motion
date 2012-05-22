@@ -3,7 +3,7 @@ package TipJar::Motion::default_parser;
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::configuration;
 use TipJar::Motion::type 'PARSER';
-sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->prototype } }
+sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->type } }
 use strict;
 use TipJar::Motion::lexicon;
 *lexicon = TipJar::Motion::configuration::accessor();
@@ -68,14 +68,16 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
-       warn "input token: [$string]";
+#       warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
    };
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
+#      warn "found $lookup_result $lookup_result";
+#      eval { warn "found $lookup_result $$lookup_result"};
     my $wants = $lookup_result->wants2;
     my @args;
     if(@$wants){
-        warn "WANTS2: [@$wants]";
+        # warn "WANTS2: [@$wants]";
     # give found mote opportunity to replace the parser
     my $subparser = $lookup_result->parser($parser);
     for my $w (@$wants){
@@ -85,7 +87,7 @@ sub next_mote{
     };
     };
     unshift @$prepend, $lookup_result->process($parser,@args);
-    warn "parser output list: [@$prepend]";
-    shift @$prepend
+    # warn "parser output list: [@$prepend]";
+    shift @$prepend  # "leftmost derivation"
 }
 1;
