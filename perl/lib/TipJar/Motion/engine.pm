@@ -11,10 +11,10 @@ use parent TipJar::Motion::Mote;
 ## my %PARSER; sub parser{my $s=shift; @_ and $PARSER{$$s} = shift; $PARSER{$$s}}
 ## my %FAILURE; sub failure{my $s=shift; @_ and $FAILURE{$$s} = shift; $FAILURE{$$s}}
 ## }
-*input = accessor();
-*output = accessor();
-*parser= accessor();
-*failure = accessor();
+*input = accessor('engine input');
+*output = accessor('engine output');
+*parser= accessor('engine parser');
+*failure = accessor('engine failure');
 use TipJar::Motion::type  'ENGINE' ;
 sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->type } }
 

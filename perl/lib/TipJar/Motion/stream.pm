@@ -1,6 +1,5 @@
 
 package TipJar::Motion::stream;
-use TipJar::Motion::Mote;
 use parent TipJar::Motion::Mote;
 =pod
 
@@ -28,11 +27,12 @@ input/output handle
 Currently doesn't know how to streamify anything else.
 =cut
 
-sub aeJ56DEXSRo{ 1 }  # Why does Check::ISA have to be difficult to build?
+sub is_motion_stream{ 1 }  # Why does Check::ISA have to be difficult to build?
+sub UNIVERSAL::is_motion_stream{0}
 sub streamify{
 
     my $unknown = shift;
-    eval { $unknown->aeJ56DEXSRo } and return $unknown;
+    $unknown->is_motion_stream and return $unknown;
 
     # is it a perl file handle?
     if (tell($unknown) > -1){
@@ -52,10 +52,16 @@ sub import{
 }
 
 sub nextchar{
+  my $tries;
   my $self = shift;
   my $c;
+ while ($tries++ < 4){
   read($self->fh, $c, 1);
-  $c
+  # warn "read from input: [$c]\n"; 
+  length $c and return $c;
+  sleep 1
+ };
+ Carp::confess "TIMEOUT WAITING FOR NEXTCHAR";
 };
 sub enqueue{
    my $self = shift;

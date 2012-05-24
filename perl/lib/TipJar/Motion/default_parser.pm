@@ -6,16 +6,17 @@ use TipJar::Motion::type 'PARSER';
 sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->type } }
 use strict;
 use TipJar::Motion::lexicon;
-*lexicon = TipJar::Motion::configuration::accessor();
-*prepend = TipJar::Motion::configuration::accessor();
+*lexicon = TipJar::Motion::configuration::accessor('parser-lexicon');
+*prepend = TipJar::Motion::configuration::accessor('parser-prepend');
 
 sub init{
    my $P = shift;
-   $P->lexicon(TipJar::Motion::lexicon->new)
+   $P->lexicon(TipJar::Motion::lexicon->new)->comment("parser_init");
 # AddLex ads a copy of the named lexicon into the
 # invocant's outer chain. It does not add the operand's outers too.
 # each new one pushes the others farther out, so list them
 # from the outside in.
+   $P->lexicon
      ->AddLex(TipJar::Motion::configuration::persistent_lexicon)
      ->AddLex(TipJar::Motion::configuration::initial_lexicon)
    ;
@@ -68,24 +69,24 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
-#       warn "input token: [$string]";
+       warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
    };
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
-#      warn "found $lookup_result $lookup_result";
+      warn "found lookup_result $lookup_result";
 #      eval { warn "found $lookup_result $$lookup_result"};
     my $wants = $lookup_result->wants2;
     my @args;
         # warn "WANTS2: [@$wants]";
     # give found mote opportunity to replace the parser
     # even if we don't need args
-    my $subparser = $lookup_result->parser($parser);
     if(@$wants){
-    for my $w (@$wants){
+      my $subparser = $lookup_result->parser($parser);  # used by STRING
+      for my $w (@$wants){
         my $arg = $subparser->next_mote($engine)->become($w);
         $w->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
-    };
+      };
     };
     unshift @$prepend, $lookup_result->process($parser,@args);
     # warn "parser output list: [@$prepend]";

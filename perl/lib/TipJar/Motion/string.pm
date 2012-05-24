@@ -9,7 +9,7 @@ use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'STRING';
 sub import  { *{caller().'::STRING'} = sub () { __PACKAGE__->type } }
 use TipJar::Motion::configuration;
-BEGIN { *string = accessor }
+BEGIN { *string = accessor('string') }
 use strict;
 
 =head1 the STRING keyword allows the

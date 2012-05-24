@@ -10,49 +10,58 @@ sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
 }
 
-sub persistify; # defined at bottom
-sub depersistify(); # defined at bottom
-INIT{depersistify}; # load persistent data before any other INIT blocks
+my $P8T;  # all persistent data goes in here
+END{
+   use Data::Dumper;
+   $Data::Dumper::Purity = 1;
+   $Data::Dumper::Sortkeys = 1;  # minimize diffs between runs
+   open P, '>', "PERSISTENT_DATA" or warn "could not open p-file: $!";
+   print P Dumper($P8T);
+}
+BEGIN{
+   if (open P, '<', "PERSISTENT_DATA"){
+       $P8T = eval join '', '{ my ',<P>, ';$VAR1}';
+       $@ and die $@;
+       close P;
+   }else{
+       warn "persistent data file: $!";
+   };
+}
 
 
 
-### edit this to tie %PL into a persistence infrastructure
+### edit this to tie %P8T into a persistence infrastructure
 ### capable of holding perl objects and their types
 ### and sponsorship relationships for GC.
 ### the requirements are somewhat subtle and the
 ### demonstration will include a working persistence
 ### layer (which the author has, from the previous draft,
 ### but doesn't want to release yet.)
-{ my %PL;
-  persistify \%PL, ;
-  $PL{motes} ||= {};
-  sub OldMote($){$PL{motes}{$_[0]}}
-  $PL{data} ||= [];
-  sub accessor(){
-       $callr =join ':', (caller)[1,2] ;
+{ 
+  $P8T->{motes} ||= {};
+  sub OldMote($){$P8T->{motes}{$_[0]}}
+  $P8T->{data} ||= {};
+  sub accessor(;$){
        ### support inside-out objects via these
-       my $unique = $$PL{callrz}{$callr} ||= $$PL{column}++;
-       $PL{data}[$unique] = {};
+       my $unique = shift || join ':', (caller)[1,2] ; 
+       $P8T->{data}{$unique} = {};
        sub {
+	          warn "accessing $unique: @_\n";
               my $mote = shift;
-              $PL{motes}{$mote->moteid} = $mote;
+              $P8T->{motes}{$mote->moteid} eq $mote or die "MOTEID ODDNESS";
               unless($mote->VMid eq ourVMid()){
                   warn "accessing $$mote with VMid ".$mote->VMid;
                   warn "which differs from our VMid ".ourVMid();
                   die "CLOUD MOTE ACCESS PROXY NEEDED";
               };
               my $id = $mote->row_id;
-              @_ and $PL{data}[$unique]{$id} = shift;
-              $PL{data}[$unique]{$id}
+              @_ and $P8T->{data}{$unique}{$id} = shift;
+              $P8T->{data}{$unique}{$id}
        }
   };
-  # use something
-  # tie %PAA, something => ...
-  our %PAA;
-  sub persistent_AA { $PL{motes} ||= \%PAA } 
   # this will be its own database table
   # with two indexed columns and an expiration column
-  sub sponsortable { $PL{sponsorships} ||= {} }
+  sub sponsortable { $P8T->{sponsorships} ||= {} }
 
 ### to make all motes blessed references to
 ### something relating with the persistence
@@ -61,63 +70,35 @@ INIT{depersistify}; # load persistent data before any other INIT blocks
 ### recover mote identifier strings.
   sub base_obj($) {
     my $scalar = shift;
-    exists $PL{motes}{$scalar} and Carp::confess( "ATTEMPTED REUSE OF MOTE-ID [$scalar]");
-    $PL{motes}{$scalar} = bless \$scalar, $scalar;
+    exists $P8T->{motes}{$scalar} and Carp::confess( "ATTEMPTED REUSE OF MOTE-ID [$scalar]");
+    $P8T->{motes}{$scalar} = bless \$scalar, $scalar;
   }
   sub generation { if (@_){
-                     $PL{generation} = shift
+                     $P8T->{generation} = shift
                    }else{
-                     $PL{generation}
+                     $P8T->{generation}
                    }
   }
 }
-INIT { eval <<\abcde or die $@ }
-use TipJar::Motion::null;
-use TipJar::Motion::string;
-use TipJar::Motion::workspace;
-use TipJar::Motion::anything;
-use TipJar::Motion::name;
-1
-abcde
-;
-my $PL_lex;
-persistify(\$PL_lex);
+sub persistent_AA { $PBT->{core_names}||={}  } 
 sub persistent_lexicon {
-    $PL_lex and return $PL_lex;
-    $PL_lex = TipJar::Motion::lexicon->new;
-    $PL_lex->lexicon(persistent_AA);
-    $PL_lex
+    $P8T->{p8t_lexobj} and return $P8T->{p8t_lexobj};
+    $P8T->{p8t_lexobj} = TipJar::Motion::lexicon->new;
+    $P8T->{p8t_lexobj}->lexicon(persistent_AA);
+    $P8T->{p8t_lexobj}->comment("PersistentLexicon");
+    $P8T->{p8t_lexobj}
 };
-my $IL;
-persistify(\$IL);
+sub initial_AA { $P8T->{i_AA} ||= {} }
 sub initial_lexicon {
-     $IL and return $IL;
-     $IL = TipJar::Motion::lexicon->new;
-     $IL->lexicon(
-       # matched key value pairs to be added to the default parser's lexicon
-       {
-            ### core types are now added to the persistent
-            ### lexicon by type's import function, and no longer
-            ### need be listed here. This may change with
-            ### addition or persistence to this rewrite.
-
-            ### NOTHING => TipJar::Motion::null->new,
-
-            #### the core types. After arranging
-            #### a persistence system, add the wet lexicon
-            #### to it and create dry environments
-            #### within SAFE sequences.
-            # TipJar::Motion::WetLexicon::WetLexicon()->explode, 
-
-       }
-     );
-     $IL->outer(persistent_lexicon);
-     $IL
+    $P8T->{i5l_lexobj} and return $P8T->{i5l_lexobj};
+    $P8T->{i5l_lexobj} = TipJar::Motion::lexicon->new;
+    $P8T->{i5l_lexobj}->lexicon(initial_AA);
+    $P8T->{i5l_lexobj}->comment("InitialLexicon");
+    $P8T->{i5l_lexobj}
 }
-sub initial_AA { initial_lexicon->lexicon }
-{ my $DummyTopRow; sub fresh_rowid{
-   ++$DummyTopRow
-} }
+sub fresh_rowid{
+   ++$PBT->{rowcounter}
+} 
 use TipJar::Motion::lexicon;
 
 ### the time an unspponsored mote is allowed to persist;
@@ -130,47 +111,14 @@ sub import{
    *{caller().'::OldMote'} = \&OldMote;
    *{caller().'::accessor'} = \&accessor;
 }
-# register variable reference as a persistence key
-my @Persistents;
-my $MARKER = 'MARKER';
-BEGIN{ $MARKER = 'MARKER'};
-sub persistify{
-    warn "marker is $MARKER";
-    push @Persistents, @_, $MARKER++;
-    
-}
-END{
-   use Data::Dumper;
-   $Data::Dumper::Purity = 1;
-   $Data::Dumper::Sortkeys = 1;  # minimize diffs between runs
-   open P, '>', "PERSISTENT_DATA" or warn "could not open p-file: $!";
-   print P Dumper(\@Persistents);
-}
-sub depersistify(){
-   unless (open P, '<', "PERSISTENT_DATA"){
-       warn "persistent data file absent";
-       return
-   };
-   my $P = eval join '', '{ my ',<P>, ';$VAR1}';
-   close P;
-   for ( @Persistents ){
-       my $this = shift @$P;
-       defined $this or die "persistence underflow";
-       # markers
-       if (!ref $_){
-           $_ eq $this or die "marker mismatch: [$_] ne [$this]";
-           warn "read  marker $_";
-       }elsif( ref $_ eq 'HASH' ){
-           %$_ = %$this
-       }elsif( ref $_ eq 'REF' ){
-           $$_ = $$this
-       }elsif( ref $_ eq 'SCALAR' ){
-           $$_ = $$this
-       }elsif( ref $_ eq 'ARRAY' ){
-           @$_ = @$this
-       }else{
-           die "don't know how to depersistify $_";
-       };
-   }
-}
-1;
+$SIG{__DIE__} = sub {Carp::cluck $@};
+
+eval <<\abcde;
+use TipJar::Motion::null;
+use TipJar::Motion::string;
+use TipJar::Motion::workspace;
+use TipJar::Motion::anything;
+use TipJar::Motion::name;
+1
+abcde
+# the eval ends true

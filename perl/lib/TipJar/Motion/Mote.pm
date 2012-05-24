@@ -113,14 +113,7 @@ sub new {
 }
 
 sub accept {
-   my $selector = shift;  # this is a type
-   my $candidate = shift; # this is not
-   # warn "selextor: $selector candidate: $candidate";
-   # warn " candidatetype: ".$candidate->type;
-   eval {
-     $selector->moteid eq $candidate->type->moteid
-   }  and return $candidate;
-   Carp::confess " $selector can't accept $candidate: $@" ;
+   Carp::confess "$_[0] IS NOT A TYPE"
 };
 
 sub become {

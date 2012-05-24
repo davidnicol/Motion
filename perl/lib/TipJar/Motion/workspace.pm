@@ -11,7 +11,8 @@ Replaces the parser's lexicon with itself.
 use parent TipJar::Motion::lexicon;
 use TipJar::Motion::type 'WORKSPACE';
 use strict;
-sub parser{ my ($W,$P) = @_;
+sub process{ my ($W,$P) = @_;
+   $W->comment("workspace within ".$P->lexicon->comment);
    $W->outer($P->lexicon);
    $P->lexicon($W);
    $P

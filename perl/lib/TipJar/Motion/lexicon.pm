@@ -30,9 +30,8 @@ sub AddLex{
    my $argument = shift;
    $argument->type->moteid eq __PACKAGE__->type->moteid
      or Carp::confess("argument [$argument] is not a LEXICON mote");
-   my $outer = $invocant->outer;
    my $new = TipJar::Motion::lexicon->new;
-   $new->outer($outer);
+   $new->outer($invocant->outer);
    $new->lexicon($argument->lexicon);
    $invocant->outer($new);
    $invocant
@@ -42,10 +41,26 @@ use TipJar::Motion::type 'LEXICON' ;
 use TipJar::Motion::configuration ;
 
 BEGIN{
-*lexicon = TipJar::Motion::configuration::accessor;
-*outer = TipJar::Motion::configuration::accessor;
+*lexicon = TipJar::Motion::configuration::accessor('lexicon AA');
+*_outer = TipJar::Motion::configuration::accessor('lexicon outer');
+*comment = TipJar::Motion::configuration::accessor('lexicon comment');
 }
 
+sub outer{
+   my $L= shift;
+   my $O = shift;
+   $O or return $L->_outer;
+   warn "setting ".$O->comment()." to be outer from ".$L->comment()."\n";
+   # guard against loops
+   my %seen;
+   my $x = $L;
+   while (defined $x){
+      warn "outertrace: ".$x->comment()."\n";
+      $seen{"$x"}++ and Carp::confess "OUTER LEXICON LOOP REJECTED";
+      $x = $x->_outer
+   };
+   $L->_outer($O)
+};
 
 
 sub perl_arrayrefname() { ref sub {} } # this is a constant, yo
@@ -55,7 +70,7 @@ sub perl_arrayrefname() { ref sub {} } # this is a constant, yo
 add items to a lexicon with this. Values must be unblessed coderefs.  
 Add a whole additional lexicon like so:
 
-    $receiver_lexicon->AddTerms( %{ $sender_lexicon->lexicon } )
+    $receiver_lexicon->AddTerms(  $sender_lexicon->explode  )
 
 Returns the invocant, allowing chaining. See also L<AddLex>.
 =cut
@@ -63,14 +78,22 @@ Returns the invocant, allowing chaining. See also L<AddLex>.
 sub AddTerms{
   my $self = shift;
   while (my($k,$v) = splice @_,0,2){
-     $self->lexicon->{"$k"} = $v
+     ref $k and $k = $k->asSTRING->string;
+     my $alreadythere = $self->lexicon->{"$k"};
+     defined $alreadythere and warn "overwriting $k : [$alreadythere]";
+     $self->lexicon->{$k} = $v
   };
   $self
 };
 
 sub explode{ %{ $_[0]->lexicon } }
 
-sub init { $_[0]->lexicon({}); $_[0] }
+my $commentcounter='a';
+sub init { $_[0]->lexicon({});
+   $_[0]->comment("$$ ".$commentcounter++);
+   Carp::cluck("created new lexicon ".$_[0]->comment);
+   $_[0]
+}
 sub Exists {
   my $self = shift;
   my $term = shift;
@@ -78,17 +101,34 @@ sub Exists {
   my $p = $self->outer;
   $p and $p->Exists($term)
 }
-sub lookup {
+sub innerlookup {
   my $self = shift;
   my $term = shift;
+  my $seen = shift;
   my $l = $self->lexicon;
   if(exists $l->{$term}){
+         warn "found [$term] in ".$self->comment().'.';
          return $l->{$term}
   };
   # warn "failed to find [$term] among [@{[sort keys %$l]}]";
   my $p = $self->outer;
-  $p and $p->lookup($term)
+  $seen->{"$self"}++ and Carp::confess "LEXICON LOOP";
+  $p and $p->innerlookup($term,$seen)
 }
+sub lookup {
+  if(1){  # lookup debugging
+    my $L = @_[0];
+    warn "looking for [$_[1]]";
+    while($L){
+        my $C = $L->comment;
+        my @keys = sort keys %{$L->lexicon};
+        warn "$C: [@keys]\n";
+        $L = $L->outer;
+    }
+  };
+  innerlookup(@_,{})
+}
+
 # processing this mote yields a fresh lexicon (or lexicon-like type)
 # making this a constructor mote
 # design question: should we move this into a

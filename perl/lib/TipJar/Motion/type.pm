@@ -2,8 +2,10 @@
 package TipJar::Motion::type;
 use parent TipJar::Motion::Mote;
 use strict;
-use TipJar::Motion::configuration;
-BEGIN { *implementationpackage = accessor }
+BEGIN {
+   *implementationpackage = TipJar::Motion::configuration::accessor('type package') ;
+   *accepts = TipJar::Motion::configuration::accessor('type accepts') 
+}
 sub import{
   my $caller = caller;
   my $pack = shift;
@@ -12,21 +14,37 @@ sub import{
                
   # try to look up the prototype in persistent storage
   # if not found, mint one
-  my $type = __PACKAGE__->new;
-  $type->implementationpackage($caller);
-  TipJar::Motion::configuration::initial_AA()->{$typename} = $caller->new;
-  { no strict 'refs';
-### no, don't do this; it uses too much perl
-### but it lets us treat MOTE type names as packages,
-### most convenient.
-  ### *{"$typename\::"} = *{"$caller\::"};
+  my $core_AA = TipJar::Motion::configuration::persistent_AA();
 
+  my $type;
+  if ($core_AA->{types_by_caller}{$caller}){
+     $type = $core_AA->{types_by_caller}{$caller}
+  }else{
+     $type =  __PACKAGE__->new;
+	 $type->accepts({$type->moteid , 1})
+  };
+=pod
+TYPE motes operate as a capability to pass operands to a mote
+of a type that takes that type. They're a compile-time discipline
+feature.
+
+=cut
+  $type->implementationpackage($caller);
+### call this before overwriting new()
+  TipJar::Motion::configuration::initial_AA()->{$typename} ||= $caller->new;
+  { no strict 'refs';
   *{$caller.'::type'} = sub { $type };
   *{$caller.'::prototype'} = sub { $caller };
   }
   
 }
 __PACKAGE__->import( 'TYPE' );
+
+sub accept{
+     my $type = shift;
+	 my $candidate = shift;
+	 exists $type->accepts->{$candidate->type->moteid}
+}
 
 =pod
 
@@ -88,14 +106,8 @@ When absent, we C<require> the PACKAGE.
 =cut
 # sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
 # as a constructor OP, TYPE motes store what they require here.
-BEGIN { *constructor_operand_types = accessor }
-INIT {__PACKAGE__->type->constructor_operand_types
-or __PACKAGE__->type->constructor_operand_types([TipJar::Motion::lexicon->type] ) };
-sub wants2 { shift->constructor_operand_types || [] }
-BEGIN { *process_operand_types = accessor }
-sub wants { shift->process_operand_types || [] }
 sub process {
-    Carp::confess "base TYPE used as OP";
+    Carp::confess " TYPE used as OP";
     my ($parser,$self, $lexarg) = @_;
     my $prototype = $lexarg->lookup('PROTOTYPE') || $parser->lexicon->lookup('MOTE');
     die 'FIXME'
