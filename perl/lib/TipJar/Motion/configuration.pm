@@ -26,7 +26,7 @@ $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS motes (    -- the motes, their capability key strings, and scalar data if any
   row integer primary key,            -- 63 bits
   moteid char(25) unique not null,    -- UNIQUE constraint adds an index.
-  type integer , -- references motes(row), -- row of the type of this mote
+  type integer references motes(row), -- row of the type of this mote
   scalar text                         -- the scalar value, if any. For types, this is the perl package name.
 )
 SQL
@@ -39,7 +39,7 @@ SQL
 if (eval {
 ### type is its own type.
 my $nm = new_moteid();
-local 
+
 $dbh->do(<<'SQL',{},$nm);
 insert into motes values (0,?,0,'TipJar::Motion::type')
 SQL
@@ -52,7 +52,7 @@ SQL
 } ){
     warn "INITIALIZED NEW DATABASE"
 }else{
-   warn "using existing darabase"
+   warn "using existing darabase? $DBI::errstr"
 };
 my $bs_get_sth = $dbh->prepare('select v from bootstrap where k = ?');
 sub bootstrap_get($){
