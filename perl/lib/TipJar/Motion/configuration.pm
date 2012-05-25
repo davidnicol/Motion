@@ -6,80 +6,176 @@ copy this file into a local library directory and
 edit it.
 
 =cut
+use DBI;
+## BEGIN{  # set the persistence up before using anything else
+my $dbh;
+BEGIN{
+   $dbh  = DBI->connect("dbi:SQLite:dbname=PERSISTENT_DATA.sqlite","","",{
+                             RaiseError => 1, AutoCommit => 1, PrintError => 0
+    });
+    warn "error: [$DBI::errstr]"
+}
+#BEGIN { warn "using sqlite version ",$dbh->{sqlite_version} }
 sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
 }
 
-my $P8T;  # all persistent data goes in here
-END{
-   use Data::Dumper;
-   $Data::Dumper::Purity = 1;
-   $Data::Dumper::Sortkeys = 1;  # minimize diffs between runs
-   open P, '>', "PERSISTENT_DATA" or warn "could not open p-file: $!";
-   print P Dumper($P8T);
+use TipJar::Motion::moteid_format;
+$dbh->do('PRAGMA foreign_keys = ON');
+$dbh->do(<<'SQL');
+CREATE TABLE IF NOT EXISTS motes (    -- the motes, their capability key strings, and scalar data if any
+  row integer primary key,            -- 63 bits
+  moteid char(25) unique not null,    -- UNIQUE constraint adds an index.
+  type integer , -- references motes(row), -- row of the type of this mote
+  scalar text                         -- the scalar value, if any. For types, this is the perl package name.
+)
+SQL
+$dbh->do(<<'SQL');
+CREATE TABLE IF NOT EXISTS bootstrap (                       -- the mote IDs of base types
+   k text unique on conflict replace,                        -- key
+   v text                                                   -- value
+)
+SQL
+if (eval {
+### type is its own type.
+my $nm = new_moteid();
+local 
+$dbh->do(<<'SQL',{},$nm);
+insert into motes values (0,?,0,'TipJar::Motion::type')
+SQL
+### we didn't fail out of the eval, so we're adding things to a new database
+$dbh->do(<<'SQL');
+insert into bootstrap values (
+'TYPE TYPE',(select moteid from motes where scalar = 'TipJar::Motion::type')
+)
+SQL
+} ){
+    warn "INITIALIZED NEW DATABASE"
+}else{
+   warn "using existing darabase"
+};
+my $bs_get_sth = $dbh->prepare('select v from bootstrap where k = ?');
+sub bootstrap_get($){
+    my $ary_ref = $dbh->selectrow_arrayref($bs_get_sth,{},shift);
+	$ary_ref and $ary_ref->[0]
 }
-BEGIN{
-   if (open P, '<', "PERSISTENT_DATA"){
-       $P8T = eval join '', '{ my ',<P>, ';$VAR1}';
-       $@ and die $@;
-       close P;
-   }else{
-       warn "persistent data file: $!";
-   };
+my $bs_set_sth = $dbh->prepare('insert into bootstrap values (?,?)');
+sub bootstrap_set($$){
+    $bs_set_sth->execute($_[0],$_[1])
 }
+$dbh->do(<<'SQL');
+CREATE TABLE IF NOT EXISTS sponsorship (                    -- references tracked for GC purposes
+  sponsee integer references motes (row) on delete cascade, -- the mote that does not get deleted because of this entry
+  sponsor integer references motes (row) on delete cascade,  -- the mote that wants the beneficiary not to get deleted
+  unique (sponsor,sponsee) on conflict ignore
+)
+SQL
+$dbh->do(<<'SQL');
+CREATE TABLE IF NOT EXISTS instancedata (                          -- entries created by accessors
+   mote integer references motes (row) on delete cascade ,         -- the mote holding this instancedatum
+   package text,                                                   -- the perl package defining this accessor
+   slot integer,                                                   -- a package may declare multiple accessors
+   value text ,                                                    -- the data. 
+   unique (mote,package,slot) on conflict replace                  -- do all writes with INSERT
+)
+SQL
+$dbh->do(<<'SQL');
+CREATE TABLE IF NOT EXISTS aadata (                          -- key/value data
+   mote integer references motes (row) on delete cascade ,   -- the mote owning this pair
+   k text,                                                   -- key
+   v text,                                                   -- value
+   unique (mote,k) on conflict replace                       -- do all writes with INSERT
+)
+SQL
 
+## no table for array data; use aadata for the index values and instancedata for offsets and such
+  my $OldMotesth = $dbh->prepare(<<'SQL');
+select t.scalar
+from motes m left join motes t
+on m.type = t.row
+where m.moteid = ?  
+SQL
+                                           {my %SeenPacks;
+  sub OldMote($){
+     $_[0] or Carp::confess "OldMote called without mote id";
+     my $moteid = Encode::Base32::Crockford::normalize($_[0]);
+     $OldMotesth->execute($moteid);
+	 my $ary_ref = $OldMotesth->fetch; $OldMotesth->finish;
+	 $ary_ref or die "MOTEID $moteid NOT FOUND\n";
+	 my ($package) = @$ary_ref;
+     my $alpha = $package;
+	 if (looks_like_moteid($package)){
+		$alpha =~ s/\W//g;
+		$SeenPacks{$alpha}++ or do {
+		     die "FIXME load and eval code from usertype accessor"
+		};
+		$alpha = "TipJar::Motion::usertype::$alpha";
+	 };
+	 bless \$moteid, $alpha  
+  }
+                                          };
+  
+  
+  
+  our $TYPEBASE = OldMote (bootstrap_get 'TYPE TYPE');
 
-
-### edit this to tie %P8T into a persistence infrastructure
-### capable of holding perl objects and their types
-### and sponsorship relationships for GC.
-### the requirements are somewhat subtle and the
-### demonstration will include a working persistence
-### layer (which the author has, from the previous draft,
-### but doesn't want to release yet.)
-{ 
-  $P8T->{motes} ||= {};
-  sub OldMote($){$P8T->{motes}{$_[0]}}
-  $P8T->{data} ||= {};
+  my %AccessorSlotsByPackage;
   sub accessor(;$){
        ### support inside-out objects via these
-       my $unique = shift || join ':', (caller)[1,2] ; 
-       $P8T->{data}{$unique} = {};
-       sub {
-	          warn "accessing $unique: @_\n";
+       my $package = $dbh->quote(caller());
+	   my $slot = $AccessorSlotsByPackage{$package}++;
+	   my $optional_comment = shift;
+	   my $writer = $dbh->prepare(<<SQL);
+  insert into instancedata values ( ( select row from motes where moteid = ?), $package, $slot, ? )
+SQL
+	   my $reader = $dbh->prepare(<<SQL);
+  select value from instancedata
+  where mote = ( select row from motes where moteid = ?)
+  AND package = $package AND slot = $slot
+SQL
+       sub (;$){
+	          warn "accessing $package$slot $optional_comment: @_\n";
               my $mote = shift;
-              $P8T->{motes}{$mote->moteid} eq $mote or die "MOTEID ODDNESS";
-              unless($mote->VMid eq ourVMid()){
-                  warn "accessing $$mote with VMid ".$mote->VMid;
-                  warn "which differs from our VMid ".ourVMid();
-                  die "CLOUD MOTE ACCESS PROXY NEEDED";
-              };
               my $id = $mote->row_id;
-              @_ and $P8T->{data}{$unique}{$id} = shift;
-              $P8T->{data}{$unique}{$id}
+              @_ and $writer->execute($$mote, shift);
+			  $dbh->selectrow_array($reader,{},$$mote)
        }
   };
-  # this will be its own database table
-  # with two indexed columns and an expiration column
-  sub sponsortable { $P8T->{sponsorships} ||= {} }
+  {  my $dummyU = 'a';
+  my $dummy_insert_sth = $dbh->prepare('insert into motes (moteid, type) VALUES ( ? || ? || ?, 0 )');
+  my $set_moteid_sth = $dbh->prepare('update motes set moteid = ? where row = ?');
+  sub base_obj() {
+    $dummy_insert_sth->execute($$,time(),$dummyU++);
+	my $row = dbh->last_insert_id(undef,undef,undef,undef);
+	my $scalar = moteid_format($row);
+	$set_moteid_sth->execute($scalar,$row);
+    \$scalar;
+  }
+  }
+=head1 new_type
+take a perl package as argument, return a type mote that maps to it.
+=cut
+  sub new_type($) {
+      my $package = shift;
+	  my $type_obj = base_obj;
+	  set_scalar($type_obj, $package);
+	  $type_obj
+  }
+{
+  my $set_type_sth = $dbh->prepare( <<'SQL');
+update motes
+   set type = ( select row from motes where moteid = ? )
+where moteid = ?
+SQL
+  sub set_type{
+      my ($object,$type) = @_;
+	  $set_type_sth->execute( $$type,  $$object )
+  }
+};
+##}
+die 'smiling'
+__END__ 
 
-### to make all motes blessed references to
-### something relating with the persistence
-### framework, change this. Library code expects
-### to do scalar dereference on mote objects to
-### recover mote identifier strings.
-  sub base_obj($) {
-    my $scalar = shift;
-    exists $P8T->{motes}{$scalar} and Carp::confess( "ATTEMPTED REUSE OF MOTE-ID [$scalar]");
-    $P8T->{motes}{$scalar} = bless \$scalar, $scalar;
-  }
-  sub generation { if (@_){
-                     $P8T->{generation} = shift
-                   }else{
-                     $P8T->{generation}
-                   }
-  }
-}
 sub persistent_AA { $PBT->{core_names}||={}  } 
 sub persistent_lexicon {
     $P8T->{p8t_lexobj} and return $P8T->{p8t_lexobj};
@@ -110,6 +206,10 @@ sub import{
    no strict 'refs';
    *{caller().'::OldMote'} = \&OldMote;
    *{caller().'::accessor'} = \&accessor;
+   *{caller().'::bootstrap_set'} = \&bootstrap_set;
+   *{caller().'::bootstrap_get'} = \&bootstrap_get;
+   *{caller().'::new_type'} = \&new_type;
+
 }
 $SIG{__DIE__} = sub {Carp::cluck $@};
 

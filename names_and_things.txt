@@ -1,0 +1,21 @@
+
+We maintain a strong distinction between names and things.
+Names are character strings, while things are motes.
+Names are found in lexicons, and can be placed into the current
+lexicon with the NAME [name] [thing] operator.
+
+As the current lexicon does not persist beyond the life
+of the parser containing it, the REMEMBER [name] operator
+serves to copy a name to thing mapping into the lexicon
+one level out from the current lexicon.
+
+Within a persistent WORKSPACE, REMEMBER serves to make a name
+persist.
+
+Within a SAFE, REMEMBER will write names into the empty outer
+lexicon.
+
+the result of a SAFE [keyword-list] [sequence] operation is
+that lexicon, allowing SAFE to be used to construct lexicon
+objects.
+

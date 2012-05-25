@@ -2,7 +2,6 @@
 package TipJar::Motion::Mote;
 use strict;
 use Carp;
-require TipJar::Motion::configuration;
 =head1 base class
 
 everything, absolutely everything, in Motion
@@ -98,7 +97,7 @@ sub new {
 
     my $pack = shift;
     ref $pack and $pack = ref $pack;
-    my $mote = TipJar::Motion::configuration::base_obj(NewMoteID());
+    my $mote = TipJar::Motion::configuration::base_obj();
     my $new = bless $mote, $pack;
     my $wants = $new->wants;
     @$wants == @_ or Carp::confess "OP COUNT MISMATCH\n";
@@ -130,7 +129,7 @@ $@ and Carp::confess $@;
 };
 
 =head2 freezecode
-provide a block of implementation-langauge code that can
+provide a block of implementation-language code that can
 be evaluated (for primitives and adapters, that's string-eval;
 higher-level application code will still be string-eval, but
 making reference to a new engine, and a facility for turning
@@ -140,55 +139,6 @@ Base objects don't need this. User-defined types do.
 =cut
 sub freezecode { '' } 
 
-use Encode::Base32::Crockford qw(:all);
-
-=head2 NewMoteID
-Mote IDs are twentyfive character strings, representing
-one hundred bits, formed by concatenating five
-checksummed Crockford-encoded twenty-bit values.
-
-The first is a time value that increments every 64 seconds, taking
-just over two years to recycle.
-
-The second and fourth are random.
-
-The third is provided by the persistence layer and may be used
-for optimizing database lookups.
-
-The fifth is an organizational identifier to be used for routing
-messages between Motion instances. It defaults to "TEST=".
-
-=cut
-{
-my @Randoms;
-sub NewMoteID{
-    # this is more complex than it has to be
-    # please waste as little additional time on it as possible.
-    if (@Randoms < 2 + rand 10){
-         srand(rand(3000000000) + time + $$);
-         push @Randoms, rand(90000000) while ( rand(40) > 3);
-         push @Randoms, rand(200000000);
-         push @Randoms, rand(80000000) while ( rand(50) > 2);
-         push @Randoms, rand(100000000);
-         push @Randoms, rand(70000000) while ( rand(60) > 1);
-         for my $i ( 0 .. $#Randoms){
-             my $j = int rand @Randoms;
-             @Randoms[$i,$j] = @Randoms[$j,$i]
-         }
-    };
-    my ($r1,$r2) = splice @Randoms, 0, 2;
-    my @X = (
-       time() >> 6,
-       $r1,
-       TipJar::Motion::configuration::fresh_rowid(),
-       $r2
-    );
-    foreach (@X){
-         $_ = "00000" . base32_encode_with_checksum( $_  % 1048576 );
-         $_ = substr($_,-5,5);
-    };
-    join '',@X,TipJar::Motion::configuration::ourVMid()
-}}
 
 sub alpha_row_id { substr($$_[0], 10,4) }
 sub row_id { base32_decode_with_checksum( substr(${$_[0]}, 10,5)) }

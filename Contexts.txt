@@ -1,0 +1,12 @@
+
+CONTEXTS
+
+the interactions of the MOTE keyword, types, and operators.
+
+There are two implicit contexts: OP context and RESULT context.
+Any mote can appear in any context, but usually that causes a failure.
+
+Argument types create a context; every type can be a context.
+
+Type keywords, as ops, function as constructors.
+
