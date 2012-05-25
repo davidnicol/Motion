@@ -1,8 +1,9 @@
 
 package TipJar::Motion::lexicon;
-use parent TipJar::Motion::Mote;
 use strict;
-use Carp;
+use TipJar::Motion::type 'LEX';
+use TipJar::Motion::AA;  ### associative array mote
+
 =pod
 
 A class that provides a lexicon object, supporting lookup of strings
@@ -25,6 +26,7 @@ Later added lexicons are queried first.
 
 Returns the invocant, allowing chaining.
 =cut
+
 sub AddLex{
    my $invocant = shift;
    my $argument = shift;
@@ -37,13 +39,9 @@ sub AddLex{
    $invocant
 }
 
-use TipJar::Motion::type 'LEXICON' ;
-use TipJar::Motion::configuration ;
-
 BEGIN{
-*lexicon = TipJar::Motion::configuration::accessor('lexicon AA');
-*_outer = TipJar::Motion::configuration::accessor('lexicon outer');
-*comment = TipJar::Motion::configuration::accessor('lexicon comment');
+  *_outer = TipJar::Motion::configuration::accessor('lexicon outer');
+  *comment = TipJar::Motion::configuration::accessor('lexicon comment');
 }
 
 sub outer{

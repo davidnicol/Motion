@@ -2,9 +2,10 @@
 package TipJar::Motion::demonstration_command_line;
 
 use lib 'lib';
-use TipJar::Motion::configuration;
+use TipJar::Motion::bootstrap;
 use TipJar::Motion::stream;
 use TipJar::Motion::engine;
+use TipJar::Motion::default_parser;
 my $input = streamify(\*STDIN);
 my $output = streamify(\*STDOUT);
 my $engine = TipJar::Motion::engine->new(

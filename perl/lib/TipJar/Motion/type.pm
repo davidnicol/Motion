@@ -1,70 +1,64 @@
 
 package TipJar::Motion::type;
-use parent TipJar::Motion::Mote;
+=pod
+this package does NOT inherit from mote.
+=cut
 use strict;
-BEGIN {
-   *implementationpackage = TipJar::Motion::configuration::accessor('type package') ;
-   *accepts = TipJar::Motion::configuration::accessor('type accepts') 
-}
+use TipJar::Motion::configuration;
 sub import{
   my $caller = caller;
   my $pack = shift;
   my $typename = shift;
-  $typename or die "import called with no argument";
+  $typename or Carp::confess "USAGE: use ".__PACKAGE__." 'typename';";
+  @_ and die "USAGE: use ".__PACKAGE__." 'typename';";
                
   # try to look up the prototype in persistent storage
   # if not found, mint one
-  my $core_AA = TipJar::Motion::configuration::persistent_AA();
 
-  my $type;
-  if ($core_AA->{types_by_caller}{$caller}){
-     $type = $core_AA->{types_by_caller}{$caller}
-  }else{
-     $type =  __PACKAGE__->new;
-	 $type->accepts({$type->moteid , 1})
+  my $type = OldMote(bootstrap_get("$typename TYPE"));
+  $type or do {
+       $type = new_type $caller;
+	   bootstrap_set("$typename TYPE", $$type)
   };
+  
+  no strict 'refs';
+  ${$caller.'::type'} = sub { $type };
+  
+}
+  
 =pod
+
 TYPE motes operate as a capability to pass operands to a mote
 of a type that takes that type. They're a compile-time discipline
 feature.
 
-=cut
-  $type->implementationpackage($caller);
-### call this before overwriting new()
-  TipJar::Motion::configuration::initial_AA()->{$typename} ||= $caller->new;
-  { no strict 'refs';
-  *{$caller.'::type'} = sub { $type };
-  *{$caller.'::prototype'} = sub { $caller };
-  }
-  
-}
-__PACKAGE__->import( 'TYPE' );
+TYPE motes also map to implementation packages.
 
-sub accept{
-     my $type = shift;
-	 my $candidate = shift;
-	 exists $type->accepts->{$candidate->type->moteid}
-}
+Multiple types can direct to the same package.
+
+By design, there is no way to map from package to type.
+
+=cut
 
 =pod
 
 the TYPE type is only used for coercion operations (become, accept)
-As an OP, the TYPE keyword becomes a type constructor type, which
-consumes a lexicon to produce a new type.
 
-this package declares C<type> and C<prototype> methods in callers when used 
-with an argument.
+
+As an OP, the TYPE keyword becomes a type constructor type, which
+consumes a lexicon to produce a new user type.
 
 types are motes. The core types all appear in the initial lexicon as
-the provided names.
+the provided names, this placement occurs in configuration.pm
 
-The provided name for this package is 'TYPE';
+The provided name for this package is 'TYPE'; 
 
 =head2 $caller::type
 a mote representing the type, used in operand lists
 
-=head2 $caller::prototype
-an example of the type, used in inheritance method resolution.
+=head2
+
+To access a type's package, access the type mote's scalar value
 
 =cut
 
@@ -72,7 +66,12 @@ an example of the type, used in inheritance method resolution.
 =head1 constructor
 
 Constructing a new type requires passing in a LEXICON mote
-from which the various options will be pulled. Options include
+from which the various options will be pulled.
+
+This is how user types, including OPs, which are expected to be singletons
+are defined.
+
+Options include
 
 =head2 PROTOTYPE
 

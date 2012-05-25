@@ -1,20 +1,25 @@
 
 package TipJar::Motion::configuration;
+use strict;
 =head1 local configuration
 
 copy this file into a local library directory and
 edit it.
 
 =cut
+use Carp ();
 use DBI;
-## BEGIN{  # set the persistence up before using anything else
-my $dbh;
-BEGIN{
-   $dbh  = DBI->connect("dbi:SQLite:dbname=PERSISTENT_DATA.sqlite","","",{
+### all access to the $dbh should be within the BEGIN block our $dbh;
+ my $dbh;
+ sub reconnect{
+    undef($dbh);
+    $dbh  = DBI->connect("dbi:SQLite:dbname=PERSISTENT_DATA.sqlite","","",{
                              RaiseError => 1, AutoCommit => 1, PrintError => 0
-    });
-    warn "error: [$DBI::errstr]"
-}
+    }) or Carp::confess "DBI: $DBI::errstr";
+ }
+ reconnect;
+	
+    warn "dbh: [$dbh] errstr: [$DBI::errstr]";
 #BEGIN { warn "using sqlite version ",$dbh->{sqlite_version} }
 sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
@@ -30,6 +35,16 @@ CREATE TABLE IF NOT EXISTS motes (    -- the motes, their capability key strings
   scalar text                         -- the scalar value, if any. For types, this is the perl package name.
 )
 SQL
+my $readscalar_sth = $dbh->prepare('select scalar from motes where moteid = ?');
+sub readscalar($){
+    my $ary_ref = $dbh->selectrow_arrayref($readscalar_sth,{},shift);
+	$ary_ref and $ary_ref->[0]
+}
+my $writescalar_sth = $dbh->prepare('update motes set scalar = ? where moteid = ?');
+sub writescalar($$){
+    looks_like_moteid($_[0]) or Carp::confess "USAGE: scalar moteid, value; not $_[0]";
+    $writescalar_sth->execute($_[1],"$_[0]")
+}
 $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS bootstrap (                       -- the mote IDs of base types
    k text unique on conflict replace,                        -- key
@@ -88,6 +103,19 @@ CREATE TABLE IF NOT EXISTS aadata (                          -- key/value data
 )
 SQL
 
+my $aa_get_sth = $dbh->prepare('select v from aadata join motes on mote = row where moteid = ? and k = ?');
+sub aa_get($$){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    my $ary_ref = $dbh->selectrow_arrayref($aa_get_sth, {}, $_[0], $_[1]);
+	$ary_ref and $ary_ref->[0]
+}
+my $aa_set_sth = $dbh->prepare('insert into aadata values ( (select row from motes where moteid=?),?,?)');
+sub aa_set($$$){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    $aa_set_sth->execute($_[0],$_[1], $_[2])
+}
+
+
 ## no table for array data; use aadata for the index values and instancedata for offsets and such
   my $OldMotesth = $dbh->prepare(<<'SQL');
 select t.scalar
@@ -97,7 +125,7 @@ where m.moteid = ?
 SQL
                                            {my %SeenPacks;
   sub OldMote($){
-     $_[0] or Carp::confess "OldMote called without mote id";
+     $_[0] or return undef;
      my $moteid = Encode::Base32::Crockford::normalize($_[0]);
      $OldMotesth->execute($moteid);
 	 my $ary_ref = $OldMotesth->fetch; $OldMotesth->finish;
@@ -105,9 +133,15 @@ SQL
 	 my ($package) = @$ary_ref;
      my $alpha = $package;
 	 if (looks_like_moteid($package)){
-		$alpha =~ s/\W//g;
-		$SeenPacks{$alpha}++ or do {
-		     die "FIXME load and eval code from usertype accessor"
+	    $alpha =~ s/\W//g;
+		$SeenPacks{$package}++ or do {
+		    my $code = readscalar($package);
+		    eval <<"CODE"
+package TipJar::Motion::usertype::$alpha;
+$code
+;1;
+CODE
+            or die "user code loading failed: $@";
 		};
 		$alpha = "TipJar::Motion::usertype::$alpha";
 	 };
@@ -122,9 +156,14 @@ SQL
   my %AccessorSlotsByPackage;
   sub accessor(;$){
        ### support inside-out objects via these
-       my $package = $dbh->quote(caller());
+	   $dbh or do {
+	        Carp::cluck('reconnecting database');
+			reconnect;
+	   };
+       my $package = $dbh->quote(scalar caller());
 	   my $slot = $AccessorSlotsByPackage{$package}++;
 	   my $optional_comment = shift;
+	   Carp::cluck "creating accessor: $optional_comment:$package slot $slot";
 	   my $writer = $dbh->prepare(<<SQL);
   insert into instancedata values ( ( select row from motes where moteid = ?), $package, $slot, ? )
 SQL
@@ -146,8 +185,8 @@ SQL
   my $set_moteid_sth = $dbh->prepare('update motes set moteid = ? where row = ?');
   sub base_obj() {
     $dummy_insert_sth->execute($$,time(),$dummyU++);
-	my $row = dbh->last_insert_id(undef,undef,undef,undef);
-	my $scalar = moteid_format($row);
+	my $row = $dbh->last_insert_id(undef,undef,undef,undef);
+	my $scalar = new_moteid;
 	$set_moteid_sth->execute($scalar,$row);
     \$scalar;
   }
@@ -158,7 +197,7 @@ take a perl package as argument, return a type mote that maps to it.
   sub new_type($) {
       my $package = shift;
 	  my $type_obj = base_obj;
-	  set_scalar($type_obj, $package);
+	  writescalar($$type_obj, $package);
 	  $type_obj
   }
 {
@@ -172,53 +211,19 @@ SQL
 	  $set_type_sth->execute( $$type,  $$object )
   }
 };
-##}
-die 'smiling'
-__END__ 
-
-sub persistent_AA { $PBT->{core_names}||={}  } 
-sub persistent_lexicon {
-    $P8T->{p8t_lexobj} and return $P8T->{p8t_lexobj};
-    $P8T->{p8t_lexobj} = TipJar::Motion::lexicon->new;
-    $P8T->{p8t_lexobj}->lexicon(persistent_AA);
-    $P8T->{p8t_lexobj}->comment("PersistentLexicon");
-    $P8T->{p8t_lexobj}
-};
-sub initial_AA { $P8T->{i_AA} ||= {} }
-sub initial_lexicon {
-    $P8T->{i5l_lexobj} and return $P8T->{i5l_lexobj};
-    $P8T->{i5l_lexobj} = TipJar::Motion::lexicon->new;
-    $P8T->{i5l_lexobj}->lexicon(initial_AA);
-    $P8T->{i5l_lexobj}->comment("InitialLexicon");
-    $P8T->{i5l_lexobj}
-}
-sub fresh_rowid{
-   ++$PBT->{rowcounter}
-} 
-use TipJar::Motion::lexicon;
-
-### the time an unspponsored mote is allowed to persist;
-### ths wait between garbage collections
-### in seconds
-sub min_age() { 37 }
 
 sub import{
    no strict 'refs';
    *{caller().'::OldMote'} = \&OldMote;
    *{caller().'::accessor'} = \&accessor;
+   *{caller().'::readscalar'} = \&readscalar;
+   *{caller().'::writescalar'} = \&writescalar;
+   *{caller().'::aa_get'} = \&aa_get;
+   *{caller().'::aa_set'} = \&aa_set;
    *{caller().'::bootstrap_set'} = \&bootstrap_set;
    *{caller().'::bootstrap_get'} = \&bootstrap_get;
    *{caller().'::new_type'} = \&new_type;
 
 }
-$SIG{__DIE__} = sub {Carp::cluck $@};
 
-eval <<\abcde;
-use TipJar::Motion::null;
-use TipJar::Motion::string;
-use TipJar::Motion::workspace;
-use TipJar::Motion::anything;
-use TipJar::Motion::name;
-1
-abcde
-# the eval ends true
+1;
