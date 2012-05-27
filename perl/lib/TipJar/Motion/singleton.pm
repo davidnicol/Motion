@@ -1,5 +1,5 @@
 
-package TipJar::Motion::type;
+package TipJar::Motion::singleton;
 =pod
 this package does NOT inherit from mote.
 =cut
@@ -8,35 +8,28 @@ use TipJar::Motion::configuration;
 sub import{
   my $caller = caller;
   my $pack = shift;
-  my $typename = shift;
-  $typename or Carp::confess "USAGE: use ".__PACKAGE__." 'typename';";
-  @_ and die "USAGE: use ".__PACKAGE__." 'typename';";
+  my $singletonname = shift;
+  $singletonname or Carp::confess "USAGE: use ".__PACKAGE__." 'singletonname';";
+  @_ and die "USAGE: use ".__PACKAGE__." 'singletonname';";
                
   # try to look up the prototype in persistent storage
   # if not found, mint one
 
-  my $type = OldMote(bootstrap_get("$typename TYPE"));
-  $type or do {
-       $type = new_type $caller;
-	   bootstrap_set("$typename TYPE", $$type)
+  my $singleton = OldMote(bootstrap_get("$singletonname singleton"));
+  $singleton or do {
+       $singleton = new_type $caller;
+	   bootstrap_set("$singletonname singleton", $$singleton)
   };
   
   no strict 'refs';
-  *{$caller.'::type'} = sub { $type };
+  *{$caller.'::type'} = sub { $singleton };
   
 }
 
 =pod
 
-TYPE motes operate as a capability to pass operands to a mote
-of a type that takes that type. They're a compile-time discipline
-feature.
-
-TYPE motes also map to implementation packages.
-
-Multiple types can direct to the same package.
-
-By design, there is no way to map from package to type.
+Singleton types carry all their meaning in their implementation package,
+so all calls to the type are forwarded there.
 
 =cut
 

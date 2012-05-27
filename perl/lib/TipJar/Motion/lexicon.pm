@@ -1,6 +1,7 @@
 
 package TipJar::Motion::lexicon;
 use strict;
+use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'LEX';
 use TipJar::Motion::AA;  ### associative array mote
 
@@ -10,9 +11,9 @@ A class that provides a lexicon object, supporting lookup of strings
 to motes.
 
 =head1 instance data 
-=head2 lexicon
-the lexicon method accesses a hash of names to coderefs which are executed
-at lookup time to return values
+=head2 aa
+the aa method accesses a hash of names, blessed into persistent storage
+
 =head2 outer
 declare an inner scope by creating a new lexicon and setting its outer
 member. The persistence abstraction, when allowed,
@@ -34,7 +35,7 @@ sub AddLex{
      or Carp::confess("argument [$argument] is not a LEXICON mote");
    my $new = TipJar::Motion::lexicon->new;
    $new->outer($invocant->outer);
-   $new->lexicon($argument->lexicon);
+   $new->aa($argument->aa);
    $invocant->outer($new);
    $invocant
 }
@@ -42,6 +43,7 @@ sub AddLex{
 BEGIN{
   *_outer = TipJar::Motion::configuration::accessor('lexicon outer');
   *comment = TipJar::Motion::configuration::accessor('lexicon comment');
+  *aa = TipJar::Motion::configuration::accessor('lexicon aa');
 }
 
 sub outer{
@@ -77,17 +79,17 @@ sub AddTerms{
   my $self = shift;
   while (my($k,$v) = splice @_,0,2){
      ref $k and $k = $k->asSTRING->string;
-     my $alreadythere = $self->lexicon->{"$k"};
+     my $alreadythere = $self->aa->{"$k"};
      defined $alreadythere and warn "overwriting $k : [$alreadythere]";
-     $self->lexicon->{$k} = $v
+     $self->aa->{$k} = $v
   };
   $self
 };
 
-sub explode{ %{ $_[0]->lexicon } }
+sub explode{ %{ $_[0]->aa } }
 
 my $commentcounter='a';
-sub init { $_[0]->lexicon({});
+sub init { $_[0]->aa( TipJar::Motion::aa->new );
    $_[0]->comment("$$ ".$commentcounter++);
    Carp::cluck("created new lexicon ".$_[0]->comment);
    $_[0]
@@ -95,7 +97,7 @@ sub init { $_[0]->lexicon({});
 sub Exists {
   my $self = shift;
   my $term = shift;
-  exists $self->lexicon->{$term} and return 1;
+  exists $self->aa->{$term} and return 1;
   my $p = $self->outer;
   $p and $p->Exists($term)
 }
@@ -103,7 +105,7 @@ sub innerlookup {
   my $self = shift;
   my $term = shift;
   my $seen = shift;
-  my $l = $self->lexicon;
+  my $l = $self->aa;
   if(exists $l->{$term}){
          warn "found [$term] in ".$self->comment().'.';
          return $l->{$term}
@@ -119,7 +121,7 @@ sub lookup {
     warn "looking for [$_[1]]";
     while($L){
         my $C = $L->comment;
-        my @keys = sort keys %{$L->lexicon};
+        my @keys = sort keys %{$L->aa};
         warn "$C: [@keys]\n";
         $L = $L->outer;
     }

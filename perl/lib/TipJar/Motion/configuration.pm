@@ -76,7 +76,8 @@ sub bootstrap_get($){
 }
 my $bs_set_sth = $dbh->prepare('insert into bootstrap values (?,?)');
 sub bootstrap_set($$){
-    $bs_set_sth->execute($_[0],$_[1])
+    $bs_set_sth->execute($_[0],$_[1]);
+	$_[1]
 }
 $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS sponsorship (                    -- references tracked for GC purposes
@@ -103,6 +104,12 @@ CREATE TABLE IF NOT EXISTS aadata (                          -- key/value data
 )
 SQL
 
+my $aa_exists_sth = $dbh->prepare('select exists ( select 1 from aadata join motes on mote = row where moteid = ? and k = ? )');
+sub aa_exists($$){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    my $ary_ref = $dbh->selectrow_arrayref($aa_exists_sth, {}, $_[0], $_[1]);
+	$ary_ref and $ary_ref->[0]
+}
 my $aa_get_sth = $dbh->prepare('select v from aadata join motes on mote = row where moteid = ? and k = ?');
 sub aa_get($$){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
@@ -112,7 +119,18 @@ sub aa_get($$){
 my $aa_set_sth = $dbh->prepare('insert into aadata values ( (select row from motes where moteid=?),?,?)');
 sub aa_set($$$){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
-    $aa_set_sth->execute($_[0],$_[1], $_[2])
+    $aa_set_sth->execute($_[0],$_[1], $_[2]);
+	$_[2]
+}
+my $aa_delete_sth = $dbh->prepare('delete from aadata where mote = (select row from motes where moteid=?) and k =?');
+sub aa_delete($$){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    $aa_delete_sth->execute($_[0],$_[1])
+}
+my $aa_clear_sth = $dbh->prepare('delete from aadata where mote = (select row from motes where moteid=?)');
+sub aa_clear($){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    $aa_clear_sth->execute($_[0])
 }
 
 
@@ -163,6 +181,7 @@ CODE
        my $package = $dbh->quote(scalar caller());
 	   my $slot = $AccessorSlotsByPackage{$package}++;
 	   my $optional_comment = shift;
+	   0 and
 	   Carp::cluck "creating accessor: $optional_comment:$package slot $slot";
 	   my $writer = $dbh->prepare(<<SQL);
   insert into instancedata values ( ( select row from motes where moteid = ?), $package, $slot, ? )
@@ -220,6 +239,9 @@ sub import{
    *{caller().'::writescalar'} = \&writescalar;
    *{caller().'::aa_get'} = \&aa_get;
    *{caller().'::aa_set'} = \&aa_set;
+   *{caller().'::aa_exists'} = \&aa_exists;
+   *{caller().'::aa_delete'} = \&aa_delete;
+   *{caller().'::aa_clear'} = \&aa_clear;
    *{caller().'::bootstrap_set'} = \&bootstrap_set;
    *{caller().'::bootstrap_get'} = \&bootstrap_get;
    *{caller().'::new_type'} = \&new_type;

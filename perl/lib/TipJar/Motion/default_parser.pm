@@ -9,6 +9,7 @@ use TipJar::Motion::lexicon;
 *lexicon = TipJar::Motion::configuration::accessor('parser-lexicon');
 *prepend = TipJar::Motion::configuration::accessor('parser-prepend');
 
+use TipJar::Motion::initial_lexicon;
 sub init{
    my $P = shift;
    $P->lexicon(TipJar::Motion::lexicon->new)->comment("parser_init");
@@ -16,9 +17,7 @@ sub init{
 # invocant's outer chain. It does not add the operand's outers too.
 # each new one pushes the others farther out, so list them
 # from the outside in.
-   $P->lexicon
-     ->AddLex(TipJar::Motion::configuration::persistent_lexicon)
-     ->AddLex(TipJar::Motion::configuration::initial_lexicon)
+   $P->lexicon ->AddLex(initial_lexicon)
    ;
    $P->prepend([]);
    $P
@@ -74,12 +73,8 @@ sub next_mote{
    };
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
       warn "found lookup_result $lookup_result";
-#      eval { warn "found $lookup_result $$lookup_result"};
     my $wants = $lookup_result->wants2;
     my @args;
-        # warn "WANTS2: [@$wants]";
-    # give found mote opportunity to replace the parser
-    # even if we don't need args
     if(@$wants){
       my $subparser = $lookup_result->parser($parser);  # used by STRING
       for my $w (@$wants){

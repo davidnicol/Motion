@@ -32,13 +32,15 @@ sub Exists {
 
 use TipJar::Motion::configuration;
 sub TIEHASH{
-  my $pack = shift;
-  my $moteid = shift;
-  bless \$moteid, $pack
+  bless \$_[1], __PACKAGE__
 }
 sub FETCH{
   my ($obj, $key) = @_;
   aa_get($$obj,$key)
+}
+sub EXISTS{
+  my ($obj, $key) = @_;
+  aa_exists($$obj,$key)
 }
 sub STORE{
   my ($obj, $key, $val) = @_;

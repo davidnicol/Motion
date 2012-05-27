@@ -1,28 +1,48 @@
 
-
-use TipJar::Motion::codeloader;
-my $nothing_code = codeload <<'ENDCODE';
+package TipJar::Motion::singleton;
+use parent TipJar::Motion::Mote;
+sub init {die 'SINGLETON'}
+sub become { $_[0] }
+sub process {$_[0]}
 
 package TipJar::Motion::null;
-use parent TipJar::Motion::Mote;
+our @ISA = qw/TipJar::Motion::singleton/;
 use strict;
 use TipJar::Motion::type 'NOTHING';
-sub yield_returnable { undef }
+sub yield_returnable { () }
+sub process {()}
 
-ENDCODE
+package TipJar::Motion::true;
+our @ISA = qw/TipJar::Motion::singleton/;
+use strict;
+use TipJar::Motion::type 'TRUE';
+sub yield_returnable { "TRUE" }
 
-sub TipJar::Motion::null::freezecode { $nothing_code }
+package TipJar::Motion::false;
+our @ISA = qw/TipJar::Motion::singleton/;
+use strict;
+use TipJar::Motion::type 'FALSE';
+sub yield_returnable { "FALSE" }
 
-=pod
-
-A class that provides an object that does
-not appear in returnables
-
-=head1 instance data 
-none
-=head1 yield_returnable
-empty string
-
-=cut
+package TipJar::Motion::boolean;
+our @ISA = qw/TipJar::Motion::singleton/;
+use strict;
+use TipJar::Motion::type 'BOOLEAN';
+sub yield_returnable { () }
+sub become  {die "NOT A VALID RESULT"}
+our $T = ${TipJar::Motion::true::type()};
+our $F = ${TipJar::Motion::false::type()};
+sub accept  {  # declare a BOOLEAN argument and get either TRUE or FALSE
+    my ($self, $other) = @_;
+    $$other eq $T or $$other eq $F
+}
+# use BOOLEAN as an op to coerce the following mote into TRUE or FALSE
+use TipJar::Motion::anything;
+sub wants2 { [ANYTHING] }
+sub process {
+    my ($self, $parser, $arg) = @_;
+	
+}
+	
 
 1;
