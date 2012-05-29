@@ -99,6 +99,7 @@ sub new {
     ref $pack and $pack = ref $pack;
     my $mote = TipJar::Motion::configuration::base_obj();
     my $new = bless $mote, $pack;
+	TipJar::Motion::configuration::set_type($new, $pack->type);
     my $wants = $new->wants;
     @$wants == @_ or Carp::confess "OP COUNT MISMATCH\n";
     my @args;
@@ -141,7 +142,7 @@ sub freezecode { '' }
 
 
 sub alpha_row_id { substr($$_[0], 10,4) }
-sub row_id { base32_decode_with_checksum( substr(${$_[0]}, 10,5)) }
+sub row_id { Carp::confess }
 sub VMid { substr(${$_[0]}, -5,5) }
 
 =head1 type

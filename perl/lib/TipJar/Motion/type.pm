@@ -12,14 +12,9 @@ sub import{
   $typename or Carp::confess "USAGE: use ".__PACKAGE__." 'typename';";
   @_ and die "USAGE: use ".__PACKAGE__." 'typename';";
                
-  # try to look up the prototype in persistent storage
-  # if not found, mint one
-
-  my $type = OldMote(bootstrap_get("$typename TYPE"));
-  $type or do {
-       $type = new_type $caller;
-	   bootstrap_set("$typename TYPE", $$type)
-  };
+  # define a new type if we haven't already got one for this type name 
+  my $type = bootstrap_get("$typename TYPE");
+  $type ||= bootstrap_set("$typename TYPE", new_type $caller);
   
   no strict 'refs';
   *{$caller.'::type'} = sub { $type };

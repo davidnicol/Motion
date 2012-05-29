@@ -18,7 +18,10 @@ sub RefenceToTiedHash{
 	\%glue
 };
 
-use overload '%{}' => \&RefenceToTiedHash;
+use overload
+            '%{}' => \&RefenceToTiedHash,
+            '""' => sub { $_[0]->moteid },
+;
 
 sub explode{ %{ $_[0]->lexicon } }
 
@@ -46,6 +49,7 @@ sub STORE{
   my ($obj, $key, $val) = @_;
   aa_set($$obj,$key, $val)
 }
+sub DESTROY{ warn "destroying ${$_[0]}"}
 our $AUTOLOAD;
 sub AUTOLOAD{ Carp::confess "AUTOLOAD $AUTOLOAD" }
 1;

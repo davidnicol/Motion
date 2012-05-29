@@ -194,9 +194,22 @@ SQL
        sub (;$){
 	          warn "accessing $package$slot $optional_comment: @_\n";
               my $mote = shift;
-              my $id = $mote->row_id;
-              @_ and $writer->execute($$mote, shift);
-			  $dbh->selectrow_array($reader,{},$$mote)
+              if(@_){
+			      my $datum = shift;
+				  # store motes by moteID
+				  if (ref $datum){
+              			eval { $datum = $datum->moteid ; 1 }
+						or Carp::confess "moteid on [$datum]: $@"
+				  };
+			      $writer->execute($$mote, $datum);
+			  };
+			  my ($ret) = $dbh->selectrow_array($reader,{},$$mote);
+			  # thaw motes
+			  looks_like_moteid($ret)
+			  ?
+			     OldMote($ret)
+			  :
+			     $ret
        }
   };
   {  my $dummyU = 'a';
@@ -217,7 +230,7 @@ take a perl package as argument, return a type mote that maps to it.
       my $package = shift;
 	  my $type_obj = base_obj;
 	  writescalar($$type_obj, $package);
-	  $type_obj
+	  $$type_obj
   }
 {
   my $set_type_sth = $dbh->prepare( <<'SQL');
@@ -227,7 +240,7 @@ where moteid = ?
 SQL
   sub set_type{
       my ($object,$type) = @_;
-	  $set_type_sth->execute( $$type,  $$object )
+	  $set_type_sth->execute( $type,  $$object )
   }
 };
 

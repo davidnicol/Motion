@@ -30,8 +30,9 @@ use strict;
 use TipJar::Motion::type 'BOOLEAN';
 sub yield_returnable { () }
 sub become  {die "NOT A VALID RESULT"}
-our $T = ${TipJar::Motion::true::type()};
-our $F = ${TipJar::Motion::false::type()};
+### type() returns a moteId string
+our $T = TipJar::Motion::true::type();
+our $F = TipJar::Motion::false::type();
 sub accept  {  # declare a BOOLEAN argument and get either TRUE or FALSE
     my ($self, $other) = @_;
     $$other eq $T or $$other eq $F

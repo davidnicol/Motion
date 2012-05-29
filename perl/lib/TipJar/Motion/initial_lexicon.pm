@@ -13,7 +13,7 @@ use TipJar::Motion::lexicon;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
-   bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new);
+   OldMote bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new->moteid);
 }
 
 my $IL;

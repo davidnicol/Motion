@@ -31,7 +31,7 @@ Returns the invocant, allowing chaining.
 sub AddLex{
    my $invocant = shift;
    my $argument = shift;
-   $argument->type->moteid eq __PACKAGE__->type->moteid
+   $argument->type eq __PACKAGE__->type
      or Carp::confess("argument [$argument] is not a LEXICON mote");
    my $new = TipJar::Motion::lexicon->new;
    $new->outer($invocant->outer);
@@ -89,7 +89,7 @@ sub AddTerms{
 sub explode{ %{ $_[0]->aa } }
 
 my $commentcounter='a';
-sub init { $_[0]->aa( TipJar::Motion::aa->new );
+sub init { $_[0]->aa( TipJar::Motion::AA->new );
    $_[0]->comment("$$ ".$commentcounter++);
    Carp::cluck("created new lexicon ".$_[0]->comment);
    $_[0]

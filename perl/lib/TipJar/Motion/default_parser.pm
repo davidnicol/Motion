@@ -19,7 +19,7 @@ sub init{
 # from the outside in.
    $P->lexicon ->AddLex(initial_lexicon)
    ;
-   $P->prepend([]);
+   $P->prepend(TipJar::Motion::list->new);
    $P
 }
 
