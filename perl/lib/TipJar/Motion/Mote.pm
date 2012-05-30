@@ -2,6 +2,7 @@
 package TipJar::Motion::Mote;
 use strict;
 use Carp;
+use TipJar::Motion::configuration;
 =head1 base class
 
 everything, absolutely everything, in Motion
@@ -105,7 +106,7 @@ sub new {
     my @args;
     for my $w (@$wants){
         my $arg = shift ->become($w) ;
-        $arg = $w->accept($arg) or die "ARG TYPE MISMATCH";
+        $arg = OldMote($w)->accept($arg) or Carp::confess "ARG TYPE MISMATCH";
         push @args, $arg;
     };
 
@@ -120,38 +121,24 @@ sub become {
    my $me = shift;    # this is not a type
    my $goal = shift;  # this is a type
 eval {
-   $me->type->moteid eq $goal->moteid
+   $me->type eq $goal
 } and return $me;
 $@ and Carp::confess $@;
-   $goal->moteid eq STRING->moteid and return $me->asSTRING;
+   $goal eq TipJar::Motion::string::type() and return $me->asSTRING;
 
    # maybe the goal can take me as I am
    $me
 };
 
-=head2 freezecode
-provide a block of implementation-language code that can
-be evaluated (for primitives and adapters, that's string-eval;
-higher-level application code will still be string-eval, but
-making reference to a new engine, and a facility for turning
-a heredoc into a STREAM)
-
-Base objects don't need this. User-defined types do.
-=cut
-sub freezecode { '' } 
-
-
-sub alpha_row_id { substr($$_[0], 10,4) }
 sub row_id { Carp::confess }
-sub VMid { substr(${$_[0]}, -5,5) }
 
 =head1 type
 the type method reveals the name Motion type, for operand validation
-and parse-time coercion. Types are motes of type called TYPE, and their
+and parse-time coercion. Types are moteids of motes of type TYPE, and their
 names appear in the lexicon of the default parser. The
 TipJar::Motion::type package exports the C<type> method 
 into the current package and registers the name with the
-current parser's types lexicon.
+bootstrap lexicon.
 =cut
 
 
@@ -191,7 +178,6 @@ sub yield_returnable { ${$_[0]} }
 
 use TipJar::Motion::type 'MOTE';
 
-use TipJar::Motion::Sponsortable;
 sub sponsor { 
    my $self = shift;
    my $beneficiary = shift;

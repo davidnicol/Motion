@@ -1,6 +1,7 @@
 
 package TipJar::Motion::stream;
-use parent TipJar::Motion::Mote;
+use parent TipJar::Motion::type;
+sub become { $_[0] };
 =pod
 
 unify access to streams, to allow persistence of

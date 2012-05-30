@@ -8,8 +8,10 @@ use TipJar::Motion::engine;
 use TipJar::Motion::default_parser;
 my $input = streamify(\*STDIN);
 my $output = streamify(\*STDOUT);
+my $parser = TipJar::Motion::default_parser->new;
+warn "parser: $parser";
 my $engine = TipJar::Motion::engine->new(
-      $input,$output,TipJar::Motion::default_parser->new
+      $input,$output,$parser
 );
 while($engine->process()){
     if ($engine->failure){

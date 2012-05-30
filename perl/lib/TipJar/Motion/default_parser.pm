@@ -6,6 +6,7 @@ use TipJar::Motion::type 'PARSER';
 sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->type } }
 use strict;
 use TipJar::Motion::lexicon;
+use TipJar::Motion::list;
 *lexicon = TipJar::Motion::configuration::accessor('parser-lexicon');
 *prepend = TipJar::Motion::configuration::accessor('parser-prepend');
 

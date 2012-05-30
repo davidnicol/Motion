@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS motes (    -- the motes, their capability key strings
   row integer primary key,            -- 63 bits
   moteid char(25) unique not null,    -- UNIQUE constraint adds an index.
   type integer references motes(row), -- row of the type of this mote
-  scalar text                         -- the scalar value, if any. For types, this is the perl package name.
+  scalar text,                        -- the scalar value, if any. For types, this is the perl package name.
+  mark integer                        -- unix timestamp / 8, for mark and sweep
 )
 SQL
 my $readscalar_sth = $dbh->prepare('select scalar from motes where moteid = ?');
@@ -54,20 +55,17 @@ SQL
 if (eval {
 ### type is its own type.
 my $nm = new_moteid();
-
 $dbh->do(<<'SQL',{},$nm);
-insert into motes values (0,?,0,'TipJar::Motion::type')
+insert into motes values (0,?,0,'TipJar::Motion::type',strftime('%s','now'))
 SQL
 ### we didn't fail out of the eval, so we're adding things to a new database
-$dbh->do(<<'SQL');
-insert into bootstrap values (
-'TYPE TYPE',(select moteid from motes where scalar = 'TipJar::Motion::type')
-)
+$dbh->do(<<'SQL',{},$nm); 1
+insert into bootstrap values ( 'TYPE TYPE', ? )
 SQL
 } ){
     warn "INITIALIZED NEW DATABASE"
 }else{
-   warn "using existing darabase? $DBI::errstr"
+   warn "using existing darabase? ".$dbh->errstr
 };
 my $bs_get_sth = $dbh->prepare('select v from bootstrap where k = ?');
 sub bootstrap_get($){
@@ -79,6 +77,15 @@ sub bootstrap_set($$){
     $bs_set_sth->execute($_[0],$_[1]);
 	$_[1]
 }
+=pod
+
+marking starts with the boostrap table, then goes through the sponsorship table.
+sweeping is done using the "mark" field in the motes table.
+
+The latest generation of mark is the mark in row zero.
+
+=cut
+
 $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS sponsorship (                    -- references tracked for GC purposes
   sponsee integer references motes (row) on delete cascade, -- the mote that does not get deleted because of this entry
@@ -86,6 +93,45 @@ CREATE TABLE IF NOT EXISTS sponsorship (                    -- references tracke
   unique (sponsor,sponsee) on conflict ignore
 )
 SQL
+
+my $mark_1_sth = $dbh->prepare(<<'SQL');
+update motes set mark = strftime('%s','now')
+where moteid in (select distinct v from bootstrap)
+SQL
+
+my $mark_2_sth = $dbh->prepare(<<'SQL');  ### repeat this until it doesn't affect any rows
+update motes set mark = (select mark from motes where row = 0)
+where row in (
+   select sponsee from sponsorship join motes on row = sponsor
+       where mark >= (select mark from motes where row = 0)     -- motes sponsored by marked motes
+   except
+     select row from motes                                      -- that are not already marked
+       where mark = (select mark from motes where row = 0)
+)
+SQL
+
+my $sweep_sth = $dbh->prepare(<<'SQL');
+delete from motes where mark < (select mark from motes where row = 0)
+SQL
+
+sub mark_and_sweep{
+   warn "GC";
+   $dbh->begin_work;
+   my $m1 = 
+   $mark_1_sth->execute;
+   warn "bootstrap mark: $m1 rows";
+   for(;;){
+       my $m2rows = $mark_2_sth->execute;
+	   warn "marked $m2rows rows";
+	   $m2rows or last
+   };
+   $sweep_sth->execute;
+   $dbh->commit;
+}
+END {  ### tune the frequency
+       $$ % 5 or mark_and_sweep
+} 
+
 $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS instancedata (                          -- entries created by accessors
    mote integer references motes (row) on delete cascade ,         -- the mote holding this instancedatum
@@ -244,6 +290,11 @@ SQL
   }
 };
 
+sub begin_work{ $dbh->begin_work or die $dbh->errstr }
+sub commit{     $dbh->commit   or die $dbh->errstr   }
+sub rollback{   $dbh->rollback   or die $dbh->errstr }
+
+
 sub import{
    no strict 'refs';
    *{caller().'::OldMote'} = \&OldMote;
@@ -258,6 +309,9 @@ sub import{
    *{caller().'::bootstrap_set'} = \&bootstrap_set;
    *{caller().'::bootstrap_get'} = \&bootstrap_get;
    *{caller().'::new_type'} = \&new_type;
+   *{caller().'::begin_work'} = \&begin_work;
+   *{caller().'::commit'} = \&commit;
+   *{caller().'::rollback'} = \&rollback;
 
 }
 

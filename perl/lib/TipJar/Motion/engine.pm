@@ -20,10 +20,10 @@ sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->type } }
 
 sub wants { [STREAM, STREAM, PARSER] }
 sub init{
-    my $self = shift;
-    $self->input(shift);
-    $self->output(shift);
-    $self->parser(shift);
+    my ($self,$I,$O,$P) = shift;
+    $self->input($I);
+    $self->output($O);
+    $self->parser($P);
     $self->failure('');
     $self
 }
@@ -38,18 +38,20 @@ there is more to read from the input stream.
 =cut
 
 sub process{
-    my ($self,$parser) = splice @_, 0, 2;
+    my ($self) = shift;
     @_ and carp "process method called with args";
     my $input = $self->input;
     my $output = $self->output;
+    my $parser = $self->parser;
+	warn "using parser [$parser]";
     eval {
-          my $this = $self->parser->next_mote($self);
+          my $this = $parser->next_mote($self);
           my $retval = $this->yield_returnable;
           defined $retval and do {
               $output->enqueue( $retval );
           };
       1
-    } or die "ENGINE: $@";
+    } or Carp::confess "ENGINE: $@";
     ! $input->done
 }
 

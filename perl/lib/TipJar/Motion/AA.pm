@@ -49,6 +49,9 @@ sub STORE{
   my ($obj, $key, $val) = @_;
   aa_set($$obj,$key, $val)
 }
+sub CLEAR{ my $obj = shift;
+   aa_clear($$obj)
+}
 sub DESTROY{ warn "destroying ${$_[0]}"}
 our $AUTOLOAD;
 sub AUTOLOAD{ Carp::confess "AUTOLOAD $AUTOLOAD" }

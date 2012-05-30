@@ -9,134 +9,121 @@ BEGIN{
 };
 use strict;
 
+use overload '@{}' => sub { tie my @A, __PACKAGE__, $_[0]; \@A };
 sub init{
    my $list = shift;
    @$list = ();
    $list
 }
-use overload '@{}' => sub { tie my @A, __PACKAGE__, $_[0]; \@A };
+our $onExit;
+use Scope::local_OnExit;
 
 sub TIEARRAY { $_[1] }
 
 sub CLEAR{
+   local $onExit = sub { commit }; begin_work;
    my $list = shift;
    %{$list} = ();
    $list->offset(0);
    $list->top(0);
 };
 
+our ($OFFSET,$TOP);
 sub normalize { my ($this, $key) = @_;
     $key = int $key;
-    $key < 0 and $key += $this->top;
-    $key + $this->offset;
+	$TOP = $this->top;
+    $key < 0 and $key += $TOP;
+	$OFFSET = $this->offset;
+    $key + $OFFSET
 }
 sub EXISTS { my ($this, $key) = @_;
+    local $onExit = sub { rollback }; begin_work;
     exists $this->{$this->normalize($key)}
 }
 sub FETCH { my ($this, $key) = @_;
+    local $onExit = sub { rollback }; begin_work;
     $this->{$this->normalize($key)}
 }
 sub DELETE { my ($this, $key) = @_;
+    local $onExit = sub { commit }; begin_work;
     my $N = $this->normalize($key);
+	$N >= $TOP and return; ## out of range
+	delete $this->{$N};
     ### SIZE REDUCTION ON DELETION OF LAST ELEMENT:
-    if ( (1+$N) == $this->top ){
-
-	I STOPPED HERE
-
-	$N == $this->[sortedkeys]->[-1] and pop @{$this->[sortedkeys]};
-       my $newtop = $this->[sortedkeys]->[-1];
-       if (defined $newtop){
-           $this->[top] = 1+$newtop
-       }else{
-           $this->[top] = $this->[offset]
-       }
-    } else {
-       exists $this->[data]->{$N}
-       and splice @{$this->[sortedkeys]}, $this->LocateKey($N), 1;
-    }
-    delete $this->[data]->{$N};
-}
-sub LocateKey{ my ($this, $N) = @_; # return an OFFSET for splice in DELETE and STORE
-   my ($lower, $upper) = (0, $#{$this->[sortedkeys]});
-
-   while ($lower < $upper){
-      my $guess = int (( 1+ $lower + $upper) / 2);
-      
-      my $val = $this->[sortedkeys]->[$guess];
-      $val == $N and return $guess;
-      if ($val > $N){
-           $upper = $guess - 1;
-      }else{
-           $lower = $guess;
-      }
-
-   };
-   $lower
-
-}
-
-sub    STORE { my ($this, $key, $value) = @_;
-    my $N = $this->normalize($key);
-    $N < $this->[offset] 
-        and Carp::croak "Modification of non-creatable array value attempted, subscript $key";
-    unless (exists $this->[data]->{$N}){
-         my $location = 1+$this->LocateKey($N);
-         splice @{$this->[sortedkeys]}, $location, 0,$N;
-         $this->[top] > $N or $this->[top] = ($N+1);
+    if ( (1+$N) == $TOP ){
+	    while ($TOP-- > $OFFSET ){
+		    exists $this->{--$N} and last;
+		};
+		$this->top($TOP)   
     };
-    $this->[data]->{$N} = $value;
 }
-sub    FETCHSIZE { my ($this) = @_;
-       $this->[top] - $this->[offset]
+
+sub STORE { my ($this, $key, $value) = @_;
+    local $onExit = sub { commit }; begin_work;
+    my $N = $this->normalize($key);
+    $N < $OFFSET
+        and Carp::croak "Modification of non-creatable array value attempted, subscript $key";
+    $TOP > $N or $this->top($N+1);
+    $this->{$N} = $value;
 }
-sub    STORESIZE { my ($this, $count) = @_;
+sub FETCHSIZE { my ($this) = @_;
+    local $onExit = sub { rollback }; begin_work;
+    $this->top - $this->offset
+}
+sub STORESIZE { my ($this, $count) = @_;
+       local $onExit = sub { commit }; begin_work;
        $count = int $count;
-       $count <= 0 and return $this->CLEAR;
-       my $before = $this->FETCHSIZE;
-       $before == $count and return;  # no-op
-       if ($before < $count){ # extend the apparent length
-             $this->[top] = $this->[offset]+$count;
-             return
-       };
+       if($count <= 0){
+         %{$this} = ();
+         $this->offset(0);
+         $this->top(0);
+		 return
+	   };
+	   my $N = $this->normalize($count - 1);
+       $TOP - $OFFSET == $count and return;  # no-op
        # delete [$count] and all elements north of it
-       my $N = $this->normalize($count - 1);
-       while ($this->[sortedkeys]->[-1] > $N ){
-            my $nn = pop @{$this->[sortedkeys]};
-            delete $this->[data]->{$nn};
-       }
-       $this->[top] = $this->[offset]+$count;
+       while ($N < $TOP){
+           delete $this->{$N++};
+	   };
+       $this->top($OFFSET + $count);
 }
 sub    PUSH { my ($this, @LIST) = @_;
+       local $onExit = sub { commit }; begin_work;
+       $TOP = $this->top;
        while (@LIST){
-            $this->[data]->{$this->[top]} = shift @LIST;
-            push @{$this->[sortedkeys]}, $this->[top]++
+            $this->{$TOP++} = shift @LIST;
        };
+	   $this->top($TOP)
 }
-sub    POP { my ($this) = @_;
-       if (exists $this->[data]->{--$this->[top]}){
-                pop @{$this->[sortedkeys]};
-                return delete $this->[data]->{$this->[top]}
-       }
+sub    POP { my ($this) = shift;
+        local $onExit = sub {
+        		$this->top($TOP);
+				commit
+		};
+        begin_work;
+        $TOP = $this->top;
+		$TOP > $this->offset and return delete $this->{--$TOP}
 }
 sub    SHIFT { my ($this) = @_;
-       $this->[top] == $this->[offset] and return undef;
-       $this->[sortedkeys]->[0] == $this->[offset] and shift @{$this->[sortedkeys]};
-       delete $this->[data]->{$this->[offset]++};
+       local $onExit = sub {
+	       $this->offset($OFFSET);
+    	   commit 
+	   };
+	   begin_work;
+       $TOP = $this->top;
+	   $OFFSET = $this->offset;
+
+       $TOP == $OFFSET and return undef;
+       delete $this->{$OFFSET++};
 }
 
 sub    UNSHIFT { my ($this, @LIST) = @_;
-       my $offset = $this->[offset];
+       local $onExit = sub { commit }; begin_work;
+	   $OFFSET = $this->offset;
        while (@LIST){
-            $this->[data]->{--$offset} = pop @LIST;
-            unshift @{$this->[sortedkeys]}, $offset
+            $this->{--$OFFSET} = pop @LIST;
        };
-       $this->[offset] = $offset;
+       $this->offset($OFFSET);
 }
-
-
-
-
-
-
-
-
+sub EXTEND {} ## AA has an autoload, so we need this even though it's a no-op
+1;
