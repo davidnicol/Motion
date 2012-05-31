@@ -1,5 +1,6 @@
 
 package TipJar::Motion::default_parser;
+sub DEBUG(){0}
 use TipJar::Motion::type 'PARSER';
 use TipJar::Motion::configuration;
 use parent TipJar::Motion::Mote;
@@ -53,11 +54,14 @@ sub next_mote{
     my $parser = shift;
     my $engine = shift;
     my $lookup_result;
+    DEBUG and warn "checkpoint";
     my $prepend = $parser->prepend;
 	# warn "prepend should be a list object. It's a ".ref($prepend);
    if (@$prepend){
+    DEBUG and warn "checkpoint";
          $lookup_result = shift @$prepend
    }else{
+    DEBUG and warn "checkpoint";
     my $c;
     my $string = '';
     while(defined ($c = uc $engine->input->nextchar)){
@@ -71,12 +75,17 @@ sub next_mote{
     #remove dashes if any
     $string =~ s/-//g;
     # look up $string in lexicon or old mote table
-       warn "input token: [$string]";
+       # DEBUG and
+	   warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
    };
+    DEBUG and warn "checkpoint";
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
-      warn "found lookup_result $lookup_result";
+      # DEBUG and
+	  warn "found lookup_result $lookup_result";
+	ref $lookup_result or die "NOT A MOTE";
     my $wants = $lookup_result->wants2;
+    DEBUG and warn "checkpoint";
     my @args;
     if(@$wants){
       my $subparser = $lookup_result->parser($parser);  # used by STRING
@@ -86,8 +95,12 @@ sub next_mote{
         push @args, $arg;
       };
     };
+    DEBUG and warn "checkpoint";
     unshift @$prepend, $lookup_result->process($parser,@args);
     # warn "parser output list: [@$prepend]";
-    shift @$prepend  # "leftmost derivation"
+    DEBUG and warn "checkpoint. prepend is a ".ref $prepend;
+    my $nextmote = shift @$prepend;  # "leftmost derivation"
+	DEBUG and warn "returning $nextmote";
+	$nextmote
 }
 1;

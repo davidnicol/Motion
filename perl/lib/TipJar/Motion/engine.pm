@@ -1,5 +1,6 @@
 
 package TipJar::Motion::engine;
+sub DEBUG(){0}
 use TipJar::Motion::default_parser;
 use TipJar::Motion::stream;
 use TipJar::Motion::configuration;
@@ -49,11 +50,18 @@ sub process{
     my $parser = $self->parser;
 	0&&warn "using parser [$parser]";
     eval {
+	
+		  DEBUG and warn "checkpoint";
           my $this = $parser->next_mote($self);
-          my $retval = $this->yield_returnable;
+		  DEBUG and warn "checkpoint";
+		  my $retval = $this->yield_returnable;
+		  DEBUG and warn "checkpoint";
           defined $retval and do {
+		      DEBUG and warn "checkpoint";
               $output->enqueue( $retval );
+			  DEBUG and warn "checkpoint";
           };
+		  DEBUG and warn "checkpoint";
       1
     } or Carp::confess "ENGINE: $@";
     ! $input->done

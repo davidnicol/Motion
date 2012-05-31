@@ -9,7 +9,7 @@ BEGIN{
 		 *top = accessor('list index top')
 };
 use strict;
-
+sub DEBUG(){0}
 use overload '@{}' => sub { tie my @A, __PACKAGE__, $_[0]; \@A };
 sub init{
    my $list = shift;
@@ -49,7 +49,7 @@ sub DELETE { my ($this, $key) = @_;
     local $OnExit = sub { commit }; begin_work;
     my $N = $this->normalize($key);
 	$N >= $TOP and return; ## out of range
-	delete $this->{$N};
+	my $retval = delete $this->{$N};
     ### SIZE REDUCTION ON DELETION OF LAST ELEMENT:
     if ( (1+$N) == $TOP ){
 	    while ($TOP-- > $OFFSET ){
@@ -57,6 +57,7 @@ sub DELETE { my ($this, $key) = @_;
 		};
 		$this->top($TOP)   
     };
+	$retval
 }
 
 sub STORE { my ($this, $key, $value) = @_;
@@ -69,7 +70,9 @@ sub STORE { my ($this, $key, $value) = @_;
 }
 sub FETCHSIZE { my ($this) = @_;
     local $OnExit = sub { rollback }; begin_work;
-    $this->top - $this->offset
+    my $size = $this->top - $this->offset;
+	DEBUG and warn "returning size $size";
+	$size
 }
 sub STORESIZE { my ($this, $count) = @_;
        local $OnExit = sub { commit }; begin_work;
@@ -107,13 +110,14 @@ sub    POP { my ($this) = shift;
 }
 sub    SHIFT { my ($this) = @_;
        local $OnExit = sub {
+	       DEBUG and warn "checkpoint in scope-exit";
 	       $this->offset($OFFSET);
     	   commit 
 	   };
 	   begin_work;
        $TOP = $this->top;
 	   $OFFSET = $this->offset;
-
+DEBUG and warn "checkpoint: $$this normalized range ($OFFSET .. $TOP)";
        $TOP == $OFFSET and return undef;
        delete $this->{$OFFSET++};
 }
@@ -124,6 +128,7 @@ sub    UNSHIFT { my ($this, @LIST) = @_;
        while (@LIST){
             $this->{--$OFFSET} = pop @LIST;
        };
+	   DEBUG and warn "unshift changing offset to $OFFSET";
        $this->offset($OFFSET);
 }
 sub EXTEND {} ## AA has an autoload, so we need this even though it's a no-op

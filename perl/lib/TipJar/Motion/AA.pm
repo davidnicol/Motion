@@ -1,6 +1,7 @@
 
 package TipJar::Motion::AA;
 use strict;
+sub DEBUG(){0}
 use TipJar::Motion::type 'AA';
 use parent 'TipJar::Motion::Mote';
 
@@ -37,7 +38,8 @@ sub TIEHASH{
 }
 sub FETCH{
   my ($obj, $key) = @_;
-  aa_get($$obj,$key)
+  my $X = aa_get($$obj,$key);
+  OldMote($X)
 }
 sub EXISTS{
   my ($obj, $key) = @_;
@@ -45,15 +47,21 @@ sub EXISTS{
 }
 sub STORE{
   my ($obj, $key, $val) = @_;
-  aa_set($$obj,$key, $val)
+  DEBUG and warn "storing $val into $$obj / $key";
+  aa_set($$obj,$key, (ref $val ? $val->moteid : $val))
 }
 sub CLEAR{ my $obj = shift;
    aa_clear($$obj)
 }
+sub DELETE{ my ($obj, $key) = @_;
+   my $X = aa_get($$obj,$key);
+   aa_delete($$obj, $key);
+   OldMote($X)
+}
 my %PendingKeyLists;
 sub oneortwo($$){
    if (wantarray){
-       ($_[1], aa_get($_[0],$_[1]))
+       ($_[1], OldMote(aa_get($_[0],$_[1])))
    }else{
        $_[1]
    }

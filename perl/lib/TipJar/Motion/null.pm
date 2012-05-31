@@ -1,16 +1,17 @@
 
 package TipJar::Motion::singleton;
 use parent TipJar::Motion::Mote;
-sub init {die 'SINGLETON'}
 sub become { $_[0] }
 sub process {$_[0]}
 
 package TipJar::Motion::null;
-our @ISA = qw/TipJar::Motion::singleton/;
 use strict;
+use vars qw/$AUTOLOAD @ISA/;
+@ISA = qw/TipJar::Motion::singleton/;
 use TipJar::Motion::type 'NOTHING';
 sub yield_returnable { () }
-sub process {()}
+sub DESTROY{}
+sub AUTOLOAD { Carp::confess "autoload: $AUTOLOAD" }
 
 package TipJar::Motion::true;
 our @ISA = qw/TipJar::Motion::singleton/;
@@ -33,7 +34,7 @@ sub become  {die "NOT A VALID RESULT"}
 ### type() returns a moteId string
 our $T = TipJar::Motion::true::type();
 our $F = TipJar::Motion::false::type();
-sub accept  {  # declare a BOOLEAN argument and get either TRUE or FALSE
+sub accept  {  # declare a BOOLEAN argument to require either a TRUE or a FALSE
     my ($self, $other) = @_;
     $$other eq $T or $$other eq $F
 }

@@ -65,7 +65,7 @@ SQL
 } ){
     warn "INITIALIZED NEW DATABASE"
 }else{
-   warn "using existing darabase? ".$dbh->errstr
+   0&& warn "using existing database? ".$dbh->errstr
 };
 my $bs_get_sth = $dbh->prepare('select v from bootstrap where k = ?');
 sub bootstrap_get($){
@@ -198,6 +198,7 @@ SQL
   sub OldMote($){
      $_[0] or return undef;
      my $moteid = Encode::Base32::Crockford::normalize($_[0]);
+	 looks_like_moteid($moteid) or return $_[0];
 	 my ($package) = $dbh->selectrow_array($OldMotesth,{},$moteid);
 	 $package or die "package for MOTEID $moteid NOT FOUND\n";
 	 # Carp::cluck "old mote package: $package";

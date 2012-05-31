@@ -83,7 +83,7 @@ sub AddTerms{
      ref $k and $k = $k->asSTRING->string;
      my $alreadythere = $self->aa->{"$k"};
      defined $alreadythere and warn "overwriting $k : [$alreadythere]";
-     $self->aa->{$k} = $v
+     $self->aa->{$k} = ( ref $v ? $v->moteid : $v )
   };
   $self
 };
@@ -132,7 +132,7 @@ sub lookup {
         $L = $L->outer;
     }
   };
-  innerlookup(@_,{})
+  TipJar::Motion::configuration::OldMote( innerlookup(@_,{}) )
 }
 
 # processing this mote yields a fresh lexicon (or lexicon-like type)

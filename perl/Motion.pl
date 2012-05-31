@@ -9,7 +9,7 @@ use TipJar::Motion::default_parser;
 my $input = streamify(\*STDIN);
 my $output = streamify(\*STDOUT);
 my $parser = TipJar::Motion::default_parser->new;
-warn "parser: $parser";
+# warn "parser: $parser";
 my $engine = TipJar::Motion::engine->new(
       $input,$output,$parser
 );
