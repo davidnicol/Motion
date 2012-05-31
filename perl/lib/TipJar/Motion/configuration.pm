@@ -19,7 +19,7 @@ use DBI;
  }
  reconnect;
 	
-    warn "dbh: [$dbh] errstr: [$DBI::errstr]";
+$DBI::errstr and die "DBI errstr: [$DBI::errstr]";
 #BEGIN { warn "using sqlite version ",$dbh->{sqlite_version} }
 sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
@@ -103,7 +103,7 @@ my $mark_2_sth = $dbh->prepare(<<'SQL');  ### repeat this until it doesn't affec
 update motes set mark = (select mark from motes where row = 0)
 where row in (
    select sponsee from sponsorship join motes on row = sponsor
-       where mark >= (select mark from motes where row = 0)     -- motes sponsored by marked motes
+       where mark = (select mark from motes where row = 0)     -- motes sponsored by marked motes
    except
      select row from motes                                      -- that are not already marked
        where mark = (select mark from motes where row = 0)
@@ -123,7 +123,7 @@ sub mark_and_sweep{
    for(;;){
        my $m2rows = $mark_2_sth->execute;
 	   warn "marked $m2rows rows";
-	   $m2rows or last
+	   $m2rows > 0 or last  ## successful execute modifying 0 rows returns "0E0"
    };
    $sweep_sth->execute;
    $dbh->commit;
@@ -178,23 +178,29 @@ sub aa_clear($){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
     $aa_clear_sth->execute($_[0])
 }
-
+my $aa_listkeys_sth = $dbh->prepare('select k from aadata where mote = (select row from motes where moteid=?)');
+sub aa_listkeys($){
+    looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    $aa_listkeys_sth->execute($_[0]);
+	my $k;
+	$aa_listkeys_sth->bind_col(1,\$k);
+	my @keys;
+	push @keys, $k while($aa_listkeys_sth->fetch);
+	\@keys
+}
 
 ## no table for array data; use aadata for the index values and instancedata for offsets and such
   my $OldMotesth = $dbh->prepare(<<'SQL');
-select t.scalar
-from motes m left join motes t
-on m.type = t.row
-where m.moteid = ?  
+select scalar from motes
+where row = (select type from motes where moteid = ?)
 SQL
                                            {my %SeenPacks;
   sub OldMote($){
      $_[0] or return undef;
      my $moteid = Encode::Base32::Crockford::normalize($_[0]);
-     $OldMotesth->execute($moteid);
-	 my $ary_ref = $OldMotesth->fetch; $OldMotesth->finish;
-	 $ary_ref or die "MOTEID $moteid NOT FOUND\n";
-	 my ($package) = @$ary_ref;
+	 my ($package) = $dbh->selectrow_array($OldMotesth,{},$moteid);
+	 $package or die "package for MOTEID $moteid NOT FOUND\n";
+	 # Carp::cluck "old mote package: $package";
      my $alpha = $package;
 	 if (looks_like_moteid($package)){
 	    $alpha =~ s/\W//g;
@@ -227,8 +233,7 @@ CODE
        my $package = $dbh->quote(scalar caller());
 	   my $slot = $AccessorSlotsByPackage{$package}++;
 	   my $optional_comment = shift;
-	   0 and
-	   Carp::cluck "creating accessor: $optional_comment:$package slot $slot";
+	   # Carp::cluck "creating accessor: $optional_comment:$package slot $slot";
 	   my $writer = $dbh->prepare(<<SQL);
   insert into instancedata values ( ( select row from motes where moteid = ?), $package, $slot, ? )
 SQL
@@ -237,9 +242,9 @@ SQL
   where mote = ( select row from motes where moteid = ?)
   AND package = $package AND slot = $slot
 SQL
-       sub (;$){
-	          warn "accessing $package$slot $optional_comment: @_\n";
+       sub {
               my $mote = shift;
+	          # warn "accessing $package$slot $optional_comment: $mote : $$mote : @_\n";		  
               if(@_){
 			      my $datum = shift;
 				  # store motes by moteID
@@ -250,12 +255,13 @@ SQL
 			      $writer->execute($$mote, $datum);
 			  };
 			  my ($ret) = $dbh->selectrow_array($reader,{},$$mote);
+			  # warn "read from database: [$ret]";
 			  # thaw motes
-			  looks_like_moteid($ret)
-			  ?
-			     OldMote($ret)
-			  :
-			     $ret
+			  if (looks_like_moteid($ret)){
+			      $ret = OldMote($ret);
+			      #warn "returning [$ret]";
+			  };
+			  $ret
        }
   };
   {  my $dummyU = 'a';
@@ -290,10 +296,12 @@ SQL
   }
 };
 
-sub begin_work{ $dbh->begin_work or die $dbh->errstr }
-sub commit{     $dbh->commit   or die $dbh->errstr   }
-sub rollback{   $dbh->rollback   or die $dbh->errstr }
-
+{  my $DEPTH = 0; 
+sub rd { Carp::carp ((caller(1))[3] . " transaction depth: $DEPTH") }
+sub begin_work{ 0&&rd; $DEPTH++ or eval { $dbh->begin_work;1} or Carp::confess $dbh->errstr }
+sub commit{     0&&rd; --$DEPTH or eval { $dbh->commit;1    } or Carp::confess $dbh->errstr }
+sub rollback{   0&&rd; --$DEPTH or eval { $dbh->rollback;1  } or Carp::confess $dbh->errstr }
+}  ## scope for $DEPTH
 
 sub import{
    no strict 'refs';
@@ -306,9 +314,11 @@ sub import{
    *{caller().'::aa_exists'} = \&aa_exists;
    *{caller().'::aa_delete'} = \&aa_delete;
    *{caller().'::aa_clear'} = \&aa_clear;
+   *{caller().'::aa_listkeys'} = \&aa_listkeys;
    *{caller().'::bootstrap_set'} = \&bootstrap_set;
    *{caller().'::bootstrap_get'} = \&bootstrap_get;
    *{caller().'::new_type'} = \&new_type;
+   *{caller().'::set_type'} = \&set_type;
    *{caller().'::begin_work'} = \&begin_work;
    *{caller().'::commit'} = \&commit;
    *{caller().'::rollback'} = \&rollback;

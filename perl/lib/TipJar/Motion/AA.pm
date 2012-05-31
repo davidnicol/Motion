@@ -23,14 +23,12 @@ use overload
             '""' => sub { $_[0]->moteid },
 ;
 
-sub explode{ %{ $_[0]->lexicon } }
+sub explode{ %{ $_[0] } }
 
 sub Exists {
   my $self = shift;
   my $term = shift;
-  exists $self->lexicon->{$term} and return 1;
-  my $p = $self->outer;
-  $p and $p->Exists($term)
+  exists $self->{$term}
 }
 
 use TipJar::Motion::configuration;
@@ -52,7 +50,25 @@ sub STORE{
 sub CLEAR{ my $obj = shift;
    aa_clear($$obj)
 }
-sub DESTROY{ warn "destroying ${$_[0]}"}
+my %PendingKeyLists;
+sub oneortwo($$){
+   if (wantarray){
+       ($_[1], aa_get($_[0],$_[1]))
+   }else{
+       $_[1]
+   }
+}
+sub FIRSTKEY{ my $obj = shift;
+    $PendingKeyLists{$$obj} = aa_listkeys($$obj);
+	@{$PendingKeyLists{$$obj}} or return ();
+	oneortwo $$obj, shift @{$PendingKeyLists{$$obj}}
+}
+sub NEXTKEY{ my $obj = shift;
+	@{$PendingKeyLists{$$obj}} or return ();
+	oneortwo $$obj, shift @{$PendingKeyLists{$$obj}}
+}
+    
+sub DESTROY{ 0 and warn "destroying ${$_[0]}"}
 our $AUTOLOAD;
 sub AUTOLOAD{ Carp::confess "AUTOLOAD $AUTOLOAD" }
 1;

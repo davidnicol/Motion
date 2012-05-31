@@ -20,7 +20,11 @@ sub import  { *{caller().'::ENGINE'} = sub () { __PACKAGE__->type } }
 
 sub wants { [STREAM, STREAM, PARSER] }
 sub init{
-    my ($self,$I,$O,$P) = shift;
+    my ($self,$I,$O,$P) = @_;
+	0&&warn "ENGINE INIT: I: [$I] O:[$O] P:[$P]";
+	ref $I or Carp::confess "input not mote";
+	ref $O or Carp::confess "output not mote";
+	ref $P or Carp::confess "parser not mote";
     $self->input($I);
     $self->output($O);
     $self->parser($P);
@@ -43,7 +47,7 @@ sub process{
     my $input = $self->input;
     my $output = $self->output;
     my $parser = $self->parser;
-	warn "using parser [$parser]";
+	0&&warn "using parser [$parser]";
     eval {
           my $this = $parser->next_mote($self);
           my $retval = $this->yield_returnable;

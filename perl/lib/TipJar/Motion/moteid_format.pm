@@ -28,11 +28,11 @@ checksummed Crockford-encoded twenty-bit values.
 The first is a time value that increments every 64 seconds, taking
 just over two years to recycle.
 
-The high fourteen bits of the second, and all of the third, and fourth are random.
+The high fourteen bits of the second, and all of the third, and fifth are random.
 The low six bits of the second (the 9th character, and the parity of the 8th)
 are where we are in the 64 seconds.
 
-The fifth is an organizational identifier to be used for routing
+The fourth is an organizational identifier to be used for routing
 messages between Motion instances. It is defined in configuration.pm
 and defaults to "TEST=".
 
@@ -64,7 +64,7 @@ sub new_moteid{
 		 s/^15// or die "UNEXPECTED b32 RESULT [$_]"
     };
 	# 100 bits: 26 bits of timestamp,  54 bits of random, 20 bits of VMid
-    join '',@X,TipJar::Motion::configuration::ourVMid()
+    join '',@X[0,1,2],TipJar::Motion::configuration::ourVMid(),$X[3]
 }
 sub looks_like_moteid($){
   my $candidate = shift;

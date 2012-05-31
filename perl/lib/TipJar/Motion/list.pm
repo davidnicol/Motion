@@ -1,6 +1,7 @@
 
 
 package TipJar::Motion::list;
+use TipJar::Motion::type 'LIST';
 use parent TipJar::Motion::AA;
 use TipJar::Motion::configuration;
 BEGIN{
@@ -15,13 +16,13 @@ sub init{
    @$list = ();
    $list
 }
-our $onExit;
+our $OnExit;
 use Scope::local_OnExit;
 
 sub TIEARRAY { $_[1] }
 
 sub CLEAR{
-   local $onExit = sub { commit }; begin_work;
+   local $OnExit = sub { commit }; begin_work;
    my $list = shift;
    %{$list} = ();
    $list->offset(0);
@@ -37,15 +38,15 @@ sub normalize { my ($this, $key) = @_;
     $key + $OFFSET
 }
 sub EXISTS { my ($this, $key) = @_;
-    local $onExit = sub { rollback }; begin_work;
+    local $OnExit = sub { rollback }; begin_work;
     exists $this->{$this->normalize($key)}
 }
 sub FETCH { my ($this, $key) = @_;
-    local $onExit = sub { rollback }; begin_work;
+    local $OnExit = sub { rollback }; begin_work;
     $this->{$this->normalize($key)}
 }
 sub DELETE { my ($this, $key) = @_;
-    local $onExit = sub { commit }; begin_work;
+    local $OnExit = sub { commit }; begin_work;
     my $N = $this->normalize($key);
 	$N >= $TOP and return; ## out of range
 	delete $this->{$N};
@@ -59,7 +60,7 @@ sub DELETE { my ($this, $key) = @_;
 }
 
 sub STORE { my ($this, $key, $value) = @_;
-    local $onExit = sub { commit }; begin_work;
+    local $OnExit = sub { commit }; begin_work;
     my $N = $this->normalize($key);
     $N < $OFFSET
         and Carp::croak "Modification of non-creatable array value attempted, subscript $key";
@@ -67,11 +68,11 @@ sub STORE { my ($this, $key, $value) = @_;
     $this->{$N} = $value;
 }
 sub FETCHSIZE { my ($this) = @_;
-    local $onExit = sub { rollback }; begin_work;
+    local $OnExit = sub { rollback }; begin_work;
     $this->top - $this->offset
 }
 sub STORESIZE { my ($this, $count) = @_;
-       local $onExit = sub { commit }; begin_work;
+       local $OnExit = sub { commit }; begin_work;
        $count = int $count;
        if($count <= 0){
          %{$this} = ();
@@ -88,7 +89,7 @@ sub STORESIZE { my ($this, $count) = @_;
        $this->top($OFFSET + $count);
 }
 sub    PUSH { my ($this, @LIST) = @_;
-       local $onExit = sub { commit }; begin_work;
+       local $OnExit = sub { commit }; begin_work;
        $TOP = $this->top;
        while (@LIST){
             $this->{$TOP++} = shift @LIST;
@@ -96,7 +97,7 @@ sub    PUSH { my ($this, @LIST) = @_;
 	   $this->top($TOP)
 }
 sub    POP { my ($this) = shift;
-        local $onExit = sub {
+        local $OnExit = sub {
         		$this->top($TOP);
 				commit
 		};
@@ -105,7 +106,7 @@ sub    POP { my ($this) = shift;
 		$TOP > $this->offset and return delete $this->{--$TOP}
 }
 sub    SHIFT { my ($this) = @_;
-       local $onExit = sub {
+       local $OnExit = sub {
 	       $this->offset($OFFSET);
     	   commit 
 	   };
@@ -118,7 +119,7 @@ sub    SHIFT { my ($this) = @_;
 }
 
 sub    UNSHIFT { my ($this, @LIST) = @_;
-       local $onExit = sub { commit }; begin_work;
+       local $OnExit = sub { commit }; begin_work;
 	   $OFFSET = $this->offset;
        while (@LIST){
             $this->{--$OFFSET} = pop @LIST;

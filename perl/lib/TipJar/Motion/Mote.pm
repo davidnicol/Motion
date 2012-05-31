@@ -98,15 +98,18 @@ sub new {
 
     my $pack = shift;
     ref $pack and $pack = ref $pack;
-    my $mote = TipJar::Motion::configuration::base_obj();
-    my $new = bless $mote, $pack;
+    my $new = bless TipJar::Motion::configuration::base_obj(), $pack;
+	# warn "$pack type is ".$pack->type;
 	TipJar::Motion::configuration::set_type($new, $pack->type);
     my $wants = $new->wants;
     @$wants == @_ or Carp::confess "OP COUNT MISMATCH\n";
     my @args;
     for my $w (@$wants){
-        my $arg = shift ->become($w) ;
-        $arg = OldMote($w)->accept($arg) or Carp::confess "ARG TYPE MISMATCH";
+        my $arg = shift;
+# 		warn "want $w, have $arg $$arg";
+#       $arg = $arg	->become($w) ;
+        $arg->type eq $w or Carp::confess "ARG TYPE MISMATCH";
+#		warn "accepted to get $arg";
         push @args, $arg;
     };
 

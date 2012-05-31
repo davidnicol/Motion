@@ -1,9 +1,9 @@
 
 package TipJar::Motion::default_parser;
-use parent TipJar::Motion::Mote;
-use TipJar::Motion::configuration;
 use TipJar::Motion::type 'PARSER';
-sub import { *{caller().'::PARSER'} = sub () { __PACKAGE__->type } }
+use TipJar::Motion::configuration;
+use parent TipJar::Motion::Mote;
+sub import { *{caller().'::PARSER'} = \&type}
 use strict;
 use TipJar::Motion::lexicon;
 use TipJar::Motion::list;
@@ -13,6 +13,7 @@ use TipJar::Motion::list;
 use TipJar::Motion::initial_lexicon;
 sub init{
    my $P = shift;
+   $P->set_type(type());
    $P->lexicon(TipJar::Motion::lexicon->new)->comment("parser_init");
 # AddLex ads a copy of the named lexicon into the
 # invocant's outer chain. It does not add the operand's outers too.
@@ -53,6 +54,7 @@ sub next_mote{
     my $engine = shift;
     my $lookup_result;
     my $prepend = $parser->prepend;
+	# warn "prepend should be a list object. It's a ".ref($prepend);
    if (@$prepend){
          $lookup_result = shift @$prepend
    }else{

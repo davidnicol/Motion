@@ -4,7 +4,7 @@ use strict;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'LEX';
 use TipJar::Motion::AA;  ### associative array mote
-
+sub DEBUG(){0}
 =pod
 
 A class that provides a lexicon object, supporting lookup of strings
@@ -50,11 +50,13 @@ sub outer{
    my $L= shift;
    my $O = shift;
    $O or return $L->_outer;
+   DEBUG and
    warn "setting ".$O->comment()." to be outer from ".$L->comment()."\n";
    # guard against loops
    my %seen;
    my $x = $L;
    while (defined $x){
+   DEBUG and
       warn "outertrace: ".$x->comment()."\n";
       $seen{"$x"}++ and Carp::confess "OUTER LEXICON LOOP REJECTED";
       $x = $x->_outer
@@ -91,6 +93,7 @@ sub explode{ %{ $_[0]->aa } }
 my $commentcounter='a';
 sub init { $_[0]->aa( TipJar::Motion::AA->new );
    $_[0]->comment("$$ ".$commentcounter++);
+   DEBUG and
    Carp::cluck("created new lexicon ".$_[0]->comment);
    $_[0]
 }
@@ -107,6 +110,7 @@ sub innerlookup {
   my $seen = shift;
   my $l = $self->aa;
   if(exists $l->{$term}){
+   DEBUG and
          warn "found [$term] in ".$self->comment().'.';
          return $l->{$term}
   };
@@ -118,10 +122,12 @@ sub innerlookup {
 sub lookup {
   if(1){  # lookup debugging
     my $L = @_[0];
+   DEBUG and
     warn "looking for [$_[1]]";
     while($L){
         my $C = $L->comment;
         my @keys = sort keys %{$L->aa};
+   DEBUG and
         warn "$C: [@keys]\n";
         $L = $L->outer;
     }

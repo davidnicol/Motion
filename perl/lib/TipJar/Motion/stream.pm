@@ -1,20 +1,24 @@
 
 package TipJar::Motion::stream;
-use parent TipJar::Motion::type;
-sub become { $_[0] };
-=pod
+use parent TipJar::Motion::Mote;
 
+=pod
 unify access to streams, to allow persistence of
 streams in ways that OS file handles don't.
 
 Initially, just wrap Perl file handles, but
 leave room for motion queues.
-
 =cut
+
 use TipJar::Motion::type 'STREAM' ;
+
 {
   my %FH;
-sub fh{ my $s = shift; @_ and $FH{$$s} = shift; $FH{$$s} }
+  sub fh{ my $s = shift; 
+        # warn "local access for stream $$s";
+        @_ and $FH{$$s} = shift;
+		# warn "returning $FH{$$s}";
+		$FH{$$s} }
 }
 sub done {  my $s = shift; eof $s->fh }
 
@@ -37,7 +41,7 @@ sub streamify{
 
     # is it a perl file handle?
     if (tell($unknown) > -1){
-         my $stream = bless (TipJar::Motion::Mote->new);
+         my $stream = __PACKAGE__->new;  ### Mote::new sets type based on package
          $stream->fh($unknown);
          return $stream;
     };
@@ -49,7 +53,7 @@ sub streamify{
 sub import{
   my $caller = caller;
   *{$caller.'::streamify'} = \&streamify;
-  *{$caller.'::STREAM'} = sub () { __PACKAGE__->type }
+  *{$caller.'::STREAM'} = \&type;
 }
 
 sub nextchar{
