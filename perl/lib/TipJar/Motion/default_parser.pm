@@ -91,7 +91,7 @@ sub next_mote{
       my $subparser = $lookup_result->parser($parser);  # used by STRING
       for my $w (@$wants){
         my $arg = $subparser->next_mote($engine)->become($w);
-        $w->accept($arg) or die "ARG TYPE MISMATCH";
+        readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };
     };

@@ -11,12 +11,15 @@ In a fresh installation, the lexicon will be created.
 use TipJar::Motion::configuration;
 use TipJar::Motion::lexicon;
 use TipJar::Motion::null;
+use TipJar::Motion::string;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
    my $l = OldMote bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new->moteid);
    $l->AddTerms(
        'NOTHING' => TipJar::Motion::null->new,
+	   'STRING' => TipJar::Motion::string->new,
+	   
    
    )
 }
