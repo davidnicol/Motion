@@ -12,16 +12,18 @@ use TipJar::Motion::configuration;
 use TipJar::Motion::lexicon;
 use TipJar::Motion::null;
 use TipJar::Motion::string;
+use TipJar::Motion::workspace;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
+   warn "constructing new initial lexicon\n";
    my $l = OldMote bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new->moteid);
    $l->AddTerms(
        'NOTHING' => TipJar::Motion::null->new,        # a no-op mote, or empty return value
 	   'STRING' => TipJar::Motion::string->new,       # the next ws-delim char seq becomes a string
 	   #HERE      # HERE <token> <text> <same token again> makes text a string
 	   #SAFE      creates a limited local scope
-	   #NAME      associate a mote with a string
+	   #NAME      associate a mote with a string key in a lexicon like this one
 	   #REMEMBER  store a name into the immediately outer scope
 	   #SEQUENCE  creates a new template that takes args
 	   #PERFORM   fill and run a SEQUENCE
@@ -31,6 +33,8 @@ sub load_IL{
 	   #HANDLE
 	   #LIBRARY
 	   #WORKSPACE
+	   'WS1' => TipJar::Motion::workspace->new,
+	   'WORKSPACE' => TipJar::Motion::workspace_constructor->new,
 	   #MACRO prepends several motes into the stream, for arg lists
 	   
 	   

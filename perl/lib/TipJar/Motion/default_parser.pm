@@ -14,15 +14,13 @@ use TipJar::Motion::list;
 use TipJar::Motion::initial_lexicon;
 sub init{
    my $P = shift;
-   $P->lexicon(my $L = TipJar::Motion::lexicon->new)->comment("parser_init");
+   $P->lexicon($P->sponsor( TipJar::Motion::lexicon->new))->comment("parser_init");
 # AddLex ads a copy of the named lexicon into the
 # invocant's outer chain. It does not add the operand's outers too.
 # each new one pushes the others farther out, so list them
 # from the outside in.
    $P->lexicon ->AddLex(initial_lexicon);
-   $P->prepend(my $PP = TipJar::Motion::list->new);
-   $P->sponsor($L);
-   $P->sponsor($PP);
+   $P->prepend($P->sponsor(TipJar::Motion::list->new));
    $P
 }
 
@@ -81,6 +79,7 @@ sub next_mote{
    };
     DEBUG and warn "checkpoint";
     $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
+	$parser->sponsor($lookup_result);
       # DEBUG and
 	  warn "found lookup_result $lookup_result";
 	ref $lookup_result or die "NOT A MOTE";

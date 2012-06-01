@@ -168,11 +168,13 @@ sub sponsor {
    my $self = shift;
    my $beneficiary = shift;
    RegisterSponsorship($$self =>  (ref $beneficiary ? $$beneficiary : $beneficiary));
+   $beneficiary
 }
 sub unsponsor { 
    my $self = shift;
    my $beneficiary = shift;
      RemoveSponsorship($$self =>  (ref $beneficiary ? $$beneficiary : $beneficiary));
+   $beneficiary
 }
 
 1;
