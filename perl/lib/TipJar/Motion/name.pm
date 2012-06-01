@@ -19,5 +19,15 @@ sub process { my ($op, $parser, $name, $thing) = @_;
   $parser->lexicon->AddTerms($name->string, $thing);
   $name
 }
+
+package TipJar::Motion::remember;
+use TipJar::Motion::type 'REMEMBER';
+use parent TipJar::Motion::name;
+sub process { my ($op, $parser, $name, $thing) = @_;
+  $parser->lexicon->outer->AddTerms($name->string, $thing);
+  $name
+}
+
+
 1;
 

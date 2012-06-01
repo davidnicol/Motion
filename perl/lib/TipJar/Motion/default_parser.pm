@@ -57,12 +57,13 @@ sub next_mote{
 	# warn "prepend should be a list object. It's a ".ref($prepend);
    if (@$prepend){
     DEBUG and warn "checkpoint";
-         $lookup_result = shift @$prepend
-   }else{
+         $lookup_result = shift @$prepend;
+		 goto HAVE_LR;
+   }
     DEBUG and warn "checkpoint";
     my $c;
     my $string = '';
-    while(defined ($c = uc $engine->input->nextchar)){
+    while(defined ($c = $engine->input->nextchar)){
         if($c =~ /\s/){
            length $string and last;
         }else{
@@ -70,15 +71,23 @@ sub next_mote{
         };
     };
     length $string or return undef;
-    #remove dashes if any
-    $string =~ s/-//g;
+	$orig_string = $string;
+	$string = uc $string;
     # look up $string in lexicon or old mote table
        # DEBUG and
 	   warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
-   };
+   
     DEBUG and warn "checkpoint";
-    $lookup_result or die "TOKEN NOT FOUND IN LOOKUP\n";
+    unless($lookup_result){
+	    my $X = TipJar::Motion::configuration::OldMote($orig_string);
+		if (not ref $X){
+	       $X = TipJar::Motion::stringliteral->new;
+		   $X->string($orig_string)
+		}
+ 	    $lookup_result = $X
+	};
+	HAVE_LR:
 	$parser->sponsor($lookup_result);
       # DEBUG and
 	  warn "found lookup_result $lookup_result";

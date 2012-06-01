@@ -220,13 +220,12 @@ sub aa_listkeys($){
 select scalar from motes
 where row = (select type from motes where moteid = ?)
 SQL
-                                           {my %SeenPacks;
+{my %SeenPacks;
   sub OldMote($){
-     $_[0] or return undef;
      my $moteid = Encode::Base32::Crockford::normalize($_[0]);
 	 looks_like_moteid($moteid) or return $_[0];
 	 my ($package) = $dbh->selectrow_array($OldMotesth,{},$moteid);
-	 $package or die "package for MOTEID $moteid NOT FOUND\n";
+	 $package or return bless \$moteid, __PACKAGE__.'::BOGUS';
 	 # Carp::cluck "old mote package: $package";
      my $alpha = $package;
 	 if (looks_like_moteid($package)){
@@ -244,7 +243,7 @@ CODE
 	 };
 	 bless \$moteid, $alpha  
   }
-                                          };
+};
   
   
   
@@ -352,5 +351,21 @@ sub import{
    *{caller().'::RegisterSponsorship'} = \&RegisterSponsorship;
    *{caller().'::RemoveSponsorship'} = \&RemoveSponsorship;
 }
+
+###############################################
+package TipJar::Motion::configuration::BOGUS; #
+###############################################
+#
+#  specified in OldMote as the package
+#  that well-formed Mote IDs not found in 
+#  the database get blessed into.
+#
+#  Edit this to take appropriate action
+#  such as blocking originating IP at firewall
+#  for ten seconds or initiating an incident report.
+#
+###############################################
+our $AUTOLOAD;
+sub AUTOLOAD { Carp::confess "BOGUS MOTE ${$_[0]} ACCESSED $AUTOLOAD" }
 
 1;

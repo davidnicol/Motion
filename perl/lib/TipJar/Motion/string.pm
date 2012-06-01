@@ -41,7 +41,7 @@ sub next_mote{
      my $c;
      my $string = '';
      # "defined" won't work because (uc undef) is '' not undef
-     while(length ($c = uc $engine->input->nextchar)){
+     while(length ($c = $engine->input->nextchar)){
          # warn "string: [$string]";
          if($c =~ /\s/){
             length $string and last;
