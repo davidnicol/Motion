@@ -14,15 +14,15 @@ use TipJar::Motion::list;
 use TipJar::Motion::initial_lexicon;
 sub init{
    my $P = shift;
-   $P->set_type(type());
-   $P->lexicon(TipJar::Motion::lexicon->new)->comment("parser_init");
+   $P->lexicon(my $L = TipJar::Motion::lexicon->new)->comment("parser_init");
 # AddLex ads a copy of the named lexicon into the
 # invocant's outer chain. It does not add the operand's outers too.
 # each new one pushes the others farther out, so list them
 # from the outside in.
-   $P->lexicon ->AddLex(initial_lexicon)
-   ;
-   $P->prepend(TipJar::Motion::list->new);
+   $P->lexicon ->AddLex(initial_lexicon);
+   $P->prepend(my $PP = TipJar::Motion::list->new);
+   $P->sponsor($L);
+   $P->sponsor($PP);
    $P
 }
 

@@ -17,8 +17,22 @@ sub load_IL{
    $old and return OldMote($old);
    my $l = OldMote bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new->moteid);
    $l->AddTerms(
-       'NOTHING' => TipJar::Motion::null->new,
-	   'STRING' => TipJar::Motion::string->new,
+       'NOTHING' => TipJar::Motion::null->new,        # a no-op mote, or empty return value
+	   'STRING' => TipJar::Motion::string->new,       # the next ws-delim char seq becomes a string
+	   #HERE      # HERE <token> <text> <same token again> makes text a string
+	   #SAFE      creates a limited local scope
+	   #NAME      associate a mote with a string
+	   #REMEMBER  store a name into the immediately outer scope
+	   #SEQUENCE  creates a new template that takes args
+	   #PERFORM   fill and run a SEQUENCE
+	   #TYPE      creates a new type
+	   #MATH
+	   #FAIL
+	   #HANDLE
+	   #LIBRARY
+	   #WORKSPACE
+	   #MACRO prepends several motes into the stream, for arg lists
+	   
 	   
    
    )

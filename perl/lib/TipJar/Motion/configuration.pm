@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS motes (    -- the motes, their capability key strings
   moteid char(25) unique not null,    -- UNIQUE constraint adds an index.
   type integer references motes(row), -- row of the type of this mote
   scalar text,                        -- the scalar value, if any. For types, this is the perl package name.
-  mark integer                        -- unix timestamp / 8, for mark and sweep
+  mark integer                        -- NULL or 1 for mark and sweep
 )
 SQL
 my $readscalar_sth = $dbh->prepare('select scalar from motes where moteid = ?');
@@ -90,46 +90,72 @@ $dbh->do(<<'SQL');
 CREATE TABLE IF NOT EXISTS sponsorship (                    -- references tracked for GC purposes
   sponsee integer references motes (row) on delete cascade, -- the mote that does not get deleted because of this entry
   sponsor integer references motes (row) on delete cascade,  -- the mote that wants the beneficiary not to get deleted
-  unique (sponsor,sponsee) on conflict ignore
+  unique (sponsor,sponsee) on conflict ignore  -- sponsor first because the common
+                                               -- case should be, sponsor is deleted causing trigger
 )
 SQL
+my $sponsor_sth = $dbh->prepare(<<'SQL');
+insert into sponsorship values
+( (select row from motes where moteid=?),(select row from motes where moteid=?) )
+SQL
+my $desponsor_sth = $dbh->prepare(<<'SQL');
+delete from sponsorship
+where sponsee = (select row from motes where moteid=?)
+and   sponsor = (select row from motes where moteid=?) 
+SQL
 
+sub RegisterSponsorship{ my ($sponsor_mid, $sponsee_mid) = @_;
+     $sponsor_sth->execute($sponsee_mid, $sponsor_mid);
+}
+sub RemoveSponsorship{ my ($sponsor_mid, $sponsee_mid) = @_;
+   $desponsor_sth->execute($sponsee_mid, $sponsor_mid);
+}
 my $mark_1_sth = $dbh->prepare(<<'SQL');
-update motes set mark = strftime('%s','now')
+update motes set mark = 1
 where moteid in (select distinct v from bootstrap)
 SQL
 
 my $mark_2_sth = $dbh->prepare(<<'SQL');  ### repeat this until it doesn't affect any rows
-update motes set mark = (select mark from motes where row = 0)
+update motes set mark = 1
 where row in (
-   select sponsee from sponsorship join motes on row = sponsor
-       where mark = (select mark from motes where row = 0)     -- motes sponsored by marked motes
-   except
-     select row from motes                                      -- that are not already marked
-       where mark = (select mark from motes where row = 0)
+   select sponsee from
+   sponsorship 
+   join motes sor on sor.row = sponsor
+   join motes see on see.row = sponsee
+       where sor.mark IS NOT NULL     -- motes sponsored by marked motes
+	   and see.mark IS NULL           -- that aren't marked already
 )
 SQL
 
 my $sweep_sth = $dbh->prepare(<<'SQL');
-delete from motes where mark < (select mark from motes where row = 0)
+delete from motes where mark is null
+SQL
+
+my $clear_marks_sth = $dbh->prepare(<<'SQL');
+update motes set mark = NULL
 SQL
 
 sub mark_and_sweep{
    warn "GC";
    $dbh->begin_work;
-   my $m1 = 
+   my $r = 
    $mark_1_sth->execute;
-   warn "bootstrap mark: $m1 rows";
+   warn "bootstrap $r motes";
    for(;;){
-       my $m2rows = $mark_2_sth->execute;
-	   warn "marked $m2rows rows";
-	   $m2rows > 0 or last  ## successful execute modifying 0 rows returns "0E0"
+       $r = $mark_2_sth->execute;
+	   warn "marked $r motes";
+	   $r > 0 or last  ## successful execute modifying 0 rows returns "0E0"
    };
-   $sweep_sth->execute;
+   $r = $sweep_sth->execute;
+   warn "deleted $r motes";
+   $r = $clear_marks_sth->execute;
+   warn "reset mark on $r motes";
    $dbh->commit;
 }
 END {  ### tune the frequency
-       $$ % 5 or mark_and_sweep
+       warn "pid $$ ending";
+#       $$ % 5 or mark_and_sweep
+       time() % 5 or mark_and_sweep
 } 
 
 $dbh->do(<<'SQL');
@@ -323,7 +349,8 @@ sub import{
    *{caller().'::begin_work'} = \&begin_work;
    *{caller().'::commit'} = \&commit;
    *{caller().'::rollback'} = \&rollback;
-
+   *{caller().'::RegisterSponsorship'} = \&RegisterSponsorship;
+   *{caller().'::RemoveSponsorship'} = \&RemoveSponsorship;
 }
 
 1;

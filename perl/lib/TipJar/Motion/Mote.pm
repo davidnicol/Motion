@@ -57,23 +57,6 @@ sub asSTRING {
     $string->string( $m->moteid );
     $string
 }
-=head2 mutable
-a mote type knows if it is mutable or not.
-Mutable motes may not be resolved when compiling new
-motes from sequences.
-
-By default, motes are immutable.
-
-one time a mote is mutable is when it holds
-a changing value, that is, when it provides access
-to an L-value.
-
-Another time a mote is mutable is when it represents
-a process that goes through different states.
-
-=cut
-
-sub mutable {0}
 
 =head1 sponsor
 
@@ -184,7 +167,12 @@ use TipJar::Motion::type 'MOTE';
 sub sponsor { 
    my $self = shift;
    my $beneficiary = shift;
-   Sponsortable->add($self =>  $beneficiary);
+   RegisterSponsorship($$self =>  (ref $beneficiary ? $$beneficiary : $beneficiary));
+}
+sub unsponsor { 
+   my $self = shift;
+   my $beneficiary = shift;
+     RemoveSponsorship($$self =>  (ref $beneficiary ? $$beneficiary : $beneficiary));
 }
 
 1;
