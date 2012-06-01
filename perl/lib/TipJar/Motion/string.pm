@@ -2,7 +2,7 @@
 package TipJar::Motion::stringliteral;
 our @ISA = qw/TipJar::Motion::string/;
 use TipJar::Motion::type 'STRINGLITERAL';
-sub wants2 {[]}
+sub argtypelistref {[]}
 sub process {$_[0]}
 sub accept { ref $_[1] eq __PACKAGE__ }
 
@@ -26,7 +26,7 @@ sub parser {
 
 }
 
-sub wants2 { [ TipJar::Motion::stringliteral->type ] }
+sub argtypelistref { [ TipJar::Motion::stringliteral->type ] }
 
 sub process { my ($self, $parser, $S) = @_; $S }
 

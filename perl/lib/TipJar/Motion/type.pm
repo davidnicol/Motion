@@ -93,7 +93,7 @@ C<constructor_operand_types> instance variable slot.
 
 a LIST of type motes, that will have 'TYPE' appended to them
 before getting looked up in the current lexicon. When provided, this
-is used to construct the C<wants2> method by storing it in
+is used to construct the C<argtypelistref> method by storing it in
 the C<process_operand_types> instance variable slot.
 
 =head2 PACKAGE
@@ -108,7 +108,7 @@ read in from the database instead of C<use>d
 When absent, we C<require> the PACKAGE.
 
 =cut
-# sub wants2 { ['LEXICON'] }   # as an OP, it takes a lexicon.
+# sub argtypelistref { ['LEXICON'] }   # as an OP, it takes a lexicon.
 # as a constructor OP, TYPE motes store what they require here.
 sub process {
     Carp::confess " TYPE used as OP";

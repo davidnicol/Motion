@@ -92,7 +92,7 @@ sub next_mote{
       # DEBUG and
 	  warn "found lookup_result $lookup_result";
 	ref $lookup_result or die "NOT A MOTE";
-    my $wants = $lookup_result->wants2;
+    my $wants = $lookup_result->argtypelistref;
     DEBUG and warn "checkpoint";
     my @args;
     if(@$wants){

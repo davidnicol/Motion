@@ -19,7 +19,7 @@ how many arguments its constructor needs, and their types.
 
 by default, no operands are needed.
 
-=head2 wants2
+=head2 argtypelistref
 
 An operator mote type knows
 how many arguments it requires, and their types. 
@@ -28,7 +28,7 @@ by default, no operands are needed.
 
 =head2 process
 
-Accept the arguments described in the wants2 list and
+Accept the arguments described in the argtypelistref list and
 return a result mote.
 
 Base motes return themselves.
@@ -42,7 +42,7 @@ Base motes return the argument.
 =cut
 
 sub wants {[]}
-sub wants2 {[]}
+sub argtypelistref {[]}
 sub process { $_[0] }
 sub parser { $_[1] }
 =head2 become

@@ -13,7 +13,7 @@ use TipJar::Motion::type 'NAME';
 use TipJar::Motion::string;
 use TipJar::Motion::anything;
 
-sub wants2{ [STRING, ANYTHING] };
+sub argtypelistref{ [STRING, ANYTHING] };
 
 sub process { my ($op, $parser, $name, $thing) = @_;
   $parser->lexicon->AddTerms($name->string, $thing);

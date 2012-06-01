@@ -40,7 +40,7 @@ sub accept  {  # declare a BOOLEAN argument to require either a TRUE or a FALSE
 }
 # use BOOLEAN as an op to coerce the following mote into TRUE or FALSE
 use TipJar::Motion::anything;
-sub wants2 { [ANYTHING] }
+sub argtypelistref { [ANYTHING] }
 sub process {
     my ($self, $parser, $arg) = @_;
 	
