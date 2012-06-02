@@ -71,7 +71,7 @@ sub next_mote{
         };
     };
     length $string or return undef;
-	$orig_string = $string;
+	my $orig_string = $string;
 	$string = uc $string;
     # look up $string in lexicon or old mote table
        # DEBUG and
@@ -98,7 +98,7 @@ sub next_mote{
     if(@$wants){
       my $subparser = $lookup_result->parser($parser);  # used by STRING
       for my $w (@$wants){
-        my $arg = $subparser->next_mote($engine)->become($w);
+        my $arg = $subparser->next_mote($engine);
         readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };

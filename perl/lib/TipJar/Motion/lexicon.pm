@@ -91,7 +91,9 @@ sub AddTerms{
 sub explode{ %{ $_[0]->aa } }
 
 my $commentcounter='a';
-sub init { $_[0]->aa( TipJar::Motion::AA->new );
+sub init { 
+   my $aa = $_[0]->aa( TipJar::Motion::AA->new );
+   $_[0]->sponsor($aa);
    $_[0]->comment("$$ ".$commentcounter++);
    DEBUG and
    Carp::cluck("created new lexicon ".$_[0]->comment);
@@ -140,6 +142,14 @@ sub lookup {
 # design question: should we move this into a
 # general purpose ::::constructormote alternate base class?
 sub process{ shift->new }
+
+package TipJar::Motion::safe;
+# constructor mote for a safe environment.
+use TipJar::Motion::type 'SAFE';
+use vars ('@ISA');
+@ISA = ('TipJar::Motion::Mote');
+sub process { die 'FIXME' }
+
 1;
 
 

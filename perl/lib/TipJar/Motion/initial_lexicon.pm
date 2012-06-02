@@ -14,6 +14,7 @@ use TipJar::Motion::null;
 use TipJar::Motion::name;
 use TipJar::Motion::string;
 use TipJar::Motion::workspace;
+use TipJar::Motion::hereparser;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
@@ -22,9 +23,11 @@ sub load_IL{
    $l->AddTerms(
        'NOTHING' => TipJar::Motion::null->new,        # a no-op mote, or empty return value
 	   'STRING' => TipJar::Motion::string->new,       # the next ws-delim char seq becomes a string
-	   #HERE      # HERE <token> <text> <same token again> makes text a string
+	   # HERE <token> <text> <same token again> makes text a string
+	   'HERE' => TipJar::Motion::hereparser->new,
 	   #NAME      op to associate a mote with a string key in the current lexicon
 	   'NAME' =>  TipJar::Motion::name->new,
+       'MOTE' => TipJar::Motion::Mote_constructor->new,
 	   #REMEMBER  op to store a name into the immediately outer scope, same syntax as NAME
 	   'REMEMBER' =>  TipJar::Motion::remember->new,
 	   #SEQUENCE  creates a new template that takes args
@@ -43,12 +46,20 @@ sub load_IL{
 	   #MACRO prepends several motes into the stream, for arg lists
 	   #USERPACK op to define a perl package in the implementation language (perl, for now)
 	   ############ USERPACK is not safe and should only be included in "wet" trusted workspaces
+
+	   ## the NEWMOTE macro definition is:
+	   ##    remember newmote macro name placeholder mote endmacro
+	   ### requiring:
+	   'MACRO'    => TipJar::Motion::macro->new,
+	   'ENDMACRO' => TipJar::Motion::endmacro->new,
+	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
 	   
 	   
 ## the 2011 test suite:
 #	       name: 'NEWMOTE [name] expands to NAME [name] MOTE',
 #          input: 'NewMOTE nm nm',
 #       expected: '\\d+[A-Za-z]+'
+## defined below       'NEWMOTE' 
 #      
 #           name: 'MOTE as scalar container',
 #          input: 'newmote m setmote m string abcd fetchmote m',
@@ -144,12 +155,17 @@ sub load_IL{
      
    
    
-   )
+   );
+   ##### initial motes defined in terms of core motes
+   $l->ParseString(<<PHASE2);
+remember newmote macro X name placeholder mote X   
+PHASE2
+   $l
 }
 
 my $IL;
 sub initial_lexicon{
-   $IL ||= load_IL;   
+   $IL ||= load_IL;
 };
 
 no strict 'refs';

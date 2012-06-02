@@ -13,8 +13,9 @@ sub import{
   @_ and die "USAGE: use ".__PACKAGE__." 'typename';";
                
   # define a new type if we haven't already got one for this type name 
-  my $type = bootstrap_get("$typename TYPE");
-  $type ||= bootstrap_set("$typename TYPE", new_type $caller);
+  my $type = bootstrap_get("$typename type");
+  $type ||= bootstrap_set("$typename type", new_type $caller);
+  # warn "type for $typename is $type";
   
   no strict 'refs';
   *{$caller.'::type'} = sub { $type };

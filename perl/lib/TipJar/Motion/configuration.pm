@@ -25,6 +25,14 @@ sub ourVMid {
        "TEST=" # see TipJar::Motion::VMid. Change this to your PEN, if any
 }
 
+{  my $DEPTH = 0; 
+END { $DEPTH and warn "DEPTH MISMATCH: $DEPTH" }
+sub rd { Carp::carp ((caller(1))[3] . " transaction depth: $DEPTH") }
+sub begin_work{ 0&&rd; $DEPTH++ or eval { $dbh->begin_work;1} or Carp::confess $dbh->errstr }
+sub commit{     0&&rd; --$DEPTH or eval { $dbh->commit;1    } or Carp::confess $dbh->errstr }
+sub rollback{   0&&rd; --$DEPTH or eval { $dbh->rollback;1  } or Carp::confess $dbh->errstr }
+}  ## scope for $DEPTH
+
 use TipJar::Motion::moteid_format;
 $dbh->do('PRAGMA foreign_keys = ON');
 $dbh->do(<<'SQL');
@@ -128,17 +136,19 @@ where row in (
 SQL
 
 my $sweep_sth = $dbh->prepare(<<'SQL');
-delete from motes where mark is null
+delete from motes where mark IS NULL
 SQL
 
 my $clear_marks_sth = $dbh->prepare(<<'SQL');
 update motes set mark = NULL
 SQL
-
+sub inspect_trash(){1}
 sub mark_and_sweep{
    warn "GC";
-   $dbh->begin_work;
-   my $r = 
+   begin_work;
+   my $r = $clear_marks_sth->execute;
+   warn "reset mark on $r motes";
+   $r = 
    $mark_1_sth->execute;
    warn "bootstrap $r motes";
    for(;;){
@@ -146,16 +156,32 @@ sub mark_and_sweep{
 	   warn "marked $r motes";
 	   $r > 0 or last  ## successful execute modifying 0 rows returns "0E0"
    };
+   inspect_trash and do {
+            my $trash_arrayref = $dbh->selectall_arrayref(<<SQL);
+select m.moteid, t.scalar from motes m, motes t
+where m.mark is null and m.type = t.row
+
+SQL
+		    warn "@$_\n" for @$trash_arrayref
+   };
    $r = $sweep_sth->execute;
    warn "deleted $r motes";
-   $r = $clear_marks_sth->execute;
-   warn "reset mark on $r motes";
-   $dbh->commit;
+   $dbh->do(<<SQL);
+update motes set mark = (select count(1) from sponsorship where sponsor = motes.row)
+SQL
+   commit;
+   warn "WEIGHT: @$_\n" for @{$dbh->selectall_arrayref(<<SQL)};
+select m.moteid, m.mark, t.scalar from motes m, motes t
+where m.type = t.row
+order by m.mark desc   
+SQL
+   
+   
+
+   
 }
 END {  ### tune the frequency
-       warn "pid $$ ending";
-#       $$ % 5 or mark_and_sweep
-       time() % 5 or mark_and_sweep
+       rand(100) > 20 or mark_and_sweep
 } 
 
 $dbh->do(<<'SQL');
@@ -191,6 +217,7 @@ sub aa_get($$){
 my $aa_set_sth = $dbh->prepare('insert into aadata values ( (select row from motes where moteid=?),?,?)');
 sub aa_set($$$){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+	looks_like_moteid($_[2]) and RegisterSponsorship($_[0],$_[2]);
     $aa_set_sth->execute($_[0],$_[1], $_[2]);
 	$_[2]
 }
@@ -222,8 +249,11 @@ where row = (select type from motes where moteid = ?)
 SQL
 {my %SeenPacks;
   sub OldMote($){
-     my $moteid = Encode::Base32::Crockford::normalize($_[0]);
-	 looks_like_moteid($moteid) or return $_[0];
+     my $moteid;
+     length $_[0] && do {
+       $moteid = Encode::Base32::Crockford::normalize($_[0]);
+	   looks_like_moteid($moteid)
+	 } or return $_[0];
 	 my ($package) = $dbh->selectrow_array($OldMotesth,{},$moteid);
 	 $package or return bless \$moteid, __PACKAGE__.'::BOGUS';
 	 # Carp::cluck "old mote package: $package";
@@ -275,7 +305,11 @@ SQL
 			      my $datum = shift;
 				  # store motes by moteID
 				  if (ref $datum){
-              			eval { $datum = $datum->moteid ; 1 }
+              			eval { 
+						       $datum = $datum->moteid ;
+                               RegisterSponsorship($$mote,$datum);
+						       1 
+						}
 						or Carp::confess "moteid on [$datum]: $@"
 				  };
 			      $writer->execute($$mote, $datum);
@@ -322,12 +356,6 @@ SQL
   }
 };
 
-{  my $DEPTH = 0; 
-sub rd { Carp::carp ((caller(1))[3] . " transaction depth: $DEPTH") }
-sub begin_work{ 0&&rd; $DEPTH++ or eval { $dbh->begin_work;1} or Carp::confess $dbh->errstr }
-sub commit{     0&&rd; --$DEPTH or eval { $dbh->commit;1    } or Carp::confess $dbh->errstr }
-sub rollback{   0&&rd; --$DEPTH or eval { $dbh->rollback;1  } or Carp::confess $dbh->errstr }
-}  ## scope for $DEPTH
 
 sub import{
    no strict 'refs';

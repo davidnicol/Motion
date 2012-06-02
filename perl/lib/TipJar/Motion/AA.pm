@@ -48,7 +48,11 @@ sub EXISTS{
 sub STORE{
   my ($obj, $key, $val) = @_;
   DEBUG and warn "storing $val into $$obj / $key";
-  aa_set($$obj,$key, (ref $val ? $val->moteid : $val))
+  if (ref $val){
+      $val = $val->moteid;
+	  $obj->sponsor($val);
+  };
+  aa_set($$obj,$key, $val)
 }
 sub CLEAR{ my $obj = shift;
    aa_clear($$obj)

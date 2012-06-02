@@ -116,8 +116,6 @@ $@ and Carp::confess $@;
    $me
 };
 
-sub row_id { Carp::confess }
-
 =head1 type
 the type method reveals the name Motion type, for operand validation
 and parse-time coercion. Types are moteids of motes of type TYPE, and their
@@ -176,5 +174,9 @@ sub unsponsor {
      RemoveSponsorship($$self =>  (ref $beneficiary ? $$beneficiary : $beneficiary));
    $beneficiary
 }
+package TipJar::Motion::Mote_constructor;
+use TipJar::Motion::type 'MOTECONS';
+our @ISA = qw/TipJar::Motion::Mote/;
+sub process { TipJar::Motion::Mote->new }
 
 1;
