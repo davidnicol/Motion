@@ -4,8 +4,8 @@ our @ISA = qw/TipJar::Motion::string/;
 use TipJar::Motion::type 'STRINGLIT';
 sub argtypelistref {[]}
 sub process {$_[0]}
-sub accept { ref $_[1] eq __PACKAGE__ }
-
+sub is_a_string { 1 }
+sub UNIVERSAL::is_a_string { 0 }
 package TipJar::Motion::string;
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'STRING';
@@ -13,6 +13,7 @@ sub import  { *{caller().'::STRING'} = sub () { __PACKAGE__->type } }
 use TipJar::Motion::configuration;
 BEGIN { *string = accessor('string') }
 use strict;
+sub accept { $_[1]->is_a_string }
 
 =head1 the STRING keyword allows the
 following token to be read as a string literal.

@@ -12,12 +12,16 @@ use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'NAME';
 use TipJar::Motion::string;
 use TipJar::Motion::anything;
+use TipJar::Motion::null;
 
 sub argtypelistref{ [STRING, ANYTHING] };
 
 sub process { my ($op, $parser, $name, $thing) = @_;
-  $parser->lexicon->AddTerms($name->string, $thing);
-  $name
+  my $lex = $parser->lexicon;
+  my $namestring = $name->string;
+  warn "adding thing $thing to lex $lex as name $namestring";
+  $lex->AddTerms($namestring, $thing);
+  retnull
 }
 
 package TipJar::Motion::remember;
@@ -25,7 +29,7 @@ use TipJar::Motion::type 'REMEMBER';
 use parent TipJar::Motion::name;
 sub process { my ($op, $parser, $name, $thing) = @_;
   $parser->lexicon->outer->AddTerms($name->string, $thing);
-  $name
+  retnull
 }
 
 

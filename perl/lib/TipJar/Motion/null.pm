@@ -10,6 +10,10 @@ use vars qw/$AUTOLOAD @ISA/;
 @ISA = qw/TipJar::Motion::singleton/;
 use TipJar::Motion::type 'NOTHING';
 sub yield_returnable { () }
+sub retnull {
+      __PACKAGE__ -> new
+}
+sub import { no strict; *{caller().'::retnull'} = \&retnull }
 sub DESTROY{}
 sub AUTOLOAD { Carp::confess "autoload: $AUTOLOAD" }
 
