@@ -15,6 +15,7 @@ use TipJar::Motion::name;
 use TipJar::Motion::string;
 use TipJar::Motion::workspace;
 use TipJar::Motion::hereparser;
+use TipJar::Motion::sequence;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
@@ -24,7 +25,7 @@ sub load_IL{
        'NOTHING' => TipJar::Motion::null->new,        # a no-op mote, or empty return value
 	   'STRING' => TipJar::Motion::string->new,       # the next ws-delim char seq becomes a string
 	   # HERE <token> <text> <same token again> makes text a string
-	   'HERE' => TipJar::Motion::hereparser->new,
+	   'HEREDOC' => TipJar::Motion::hereparser->new,
 	   #NAME      op to associate a mote with a string key in the current lexicon
 	   'NAME' =>  TipJar::Motion::name->new,
        'MOTE' => TipJar::Motion::Mote_constructor->new,
@@ -158,7 +159,7 @@ sub load_IL{
    );
    ##### initial motes defined in terms of core motes
    $l->ParseString(<<PHASE2);
-remember newmote macro X name placeholder mote X   
+remember newmote macro X name placeholder mote X
 PHASE2
    $l
 }

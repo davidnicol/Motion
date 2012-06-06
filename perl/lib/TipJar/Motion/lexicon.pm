@@ -143,6 +143,21 @@ sub lookup {
 # general purpose ::::constructormote alternate base class?
 sub process{ shift->new }
 
+use TipJar::Motion::stream;
+use TipJar::Motion::engine;
+use TipJar::Motion::default_parser;
+
+
+
+sub ParseString{ my  ($lexi, $text) = @_;
+   # we want to parse the text with respect to the current lexicon.
+   my $input = TipJar::Motion::stream->new($text);
+   my $result;
+   my $output = TipJar::Motion::stream->new(\$result);
+   
+
+}
+
 package TipJar::Motion::safe;
 # constructor mote for a safe environment.
 use TipJar::Motion::type 'SAFE';

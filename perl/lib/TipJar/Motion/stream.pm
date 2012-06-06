@@ -41,13 +41,29 @@ sub streamify{
 
     # is it a perl file handle?
     if (tell($unknown) > -1){
-         my $stream = __PACKAGE__->new;  ### Mote::new sets type based on package
-         $stream->fh($unknown);
+         my $stream = __PACKAGE__->new($unknown);  ### Mote::new sets type based on package
          return $stream;
     };
 
     # don't know how to streamify this
     die "NOT A FILE HANDLE\n";
+}
+
+use TipJar::Motion::anything;
+sub wants{ [ANYTHING] }
+sub init{
+   my ($self, $arg) = @_;
+   my $ref = ref $arg;
+   my $fh;
+   if (!$ref){
+        open $fh, '<', \$arg
+   }elsif($ref eq 'SCALAR'){
+        open $fh, '>',  $_[1]
+   }else{
+        $fh = $arg;
+   };
+   $self->fh($fh);
+   $self
 }
 
 sub import{
@@ -74,5 +90,6 @@ sub enqueue{
        print { $self->fh } shift,"\n"
    }
 }
+
 
 1;

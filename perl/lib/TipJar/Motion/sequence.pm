@@ -27,7 +27,17 @@ at thaw time.
 
 =cut
 
+my @Scopes; # strictly a compile-time construct, need not persist
+
+
 package TipJar::Motion::placeholder;
+use parent TipJar::Motion::Mote;
+use TipJar::Motion::type 'PLACEHOLDER';
+
+package TipJar::Motion::endmacro;
+use parent TipJar::Motion::Mote;
+use TipJar::Motion::type 'ENDMACRO';
+
 
 package TipJar::Motion::macro;
 use parent TipJar::Motion::hereparser;
@@ -38,4 +48,4 @@ use parent TipJar::Motion::hereparser;
 use TipJar::Motion::type 'SEQ CONS';
 
 
-
+1;

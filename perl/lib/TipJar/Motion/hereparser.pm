@@ -12,6 +12,7 @@ sub process {
 	$mote->string($string);
 	$mote
 }
+sub DEBUG(){1}
 sub accept { 
   not ref $_[1] # we want a string scalar not a mote
 }
@@ -41,19 +42,20 @@ sub argtypelistref { [ type() ] } # we accept only unblessed strings
 
 sub yield_returnable { die "nonreturnable type" }
 
-package TipJar::Motion::string::parser;
+# package TipJar::Motion::string::parser;sub DEBUG(){1}
 
-sub get_token($){my $I = shift
+sub get_token($){my $I = shift;
 
   my ($c,$ws,$ret);
-  while(length ($c = $engine->input->nextchar)){
+  while(length ($c = $I->nextchar)){
          if($c =~ /\s/){
+			$ws .= $c;
             length $ret and last;
-			$ws .= $c
          }else{
             $ret .= $c;
          };
   };
+  DEBUG and warn "token: [$ret]";
   ($ws,$ret)
 }
 
@@ -62,6 +64,7 @@ sub next_mote{
     my ($pack,$engine) = @_;
     
     my ($ws,$brax) = get_token($engine->input);
+    DEBUG and warn "bracket token: [$brax]";
 	$brax = uc $brax;
     my ($token,$retstring);
     for (;;){
@@ -69,7 +72,7 @@ sub next_mote{
 		length $ws or die "HERE: OUT OF DATA LOOKING FOR [$brax]\n";
 		$retstring .= $ws;
 		$brax eq uc $token and last;
-		$restring .= $token
+		$retstring .= $token
 	};
 	$retstring
 }

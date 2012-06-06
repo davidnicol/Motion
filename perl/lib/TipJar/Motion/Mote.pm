@@ -85,13 +85,19 @@ sub new {
 	# warn "$pack type is ".$pack->type;
 	TipJar::Motion::configuration::set_type($new, $pack->type);
     my $wants = $new->wants;
-    @$wants == @_ or Carp::confess "OP COUNT MISMATCH\n";
+    @$wants == @_ or Carp::confess  <<MISMATCH;
+WANT: [@$wants]
+HAVE: [@_]
+OP COUNT MISMATCH
+MISMATCH
     my @args;
     for my $w (@$wants){
         my $arg = shift;
 # 		warn "want $w, have $arg $$arg";
 #       $arg = $arg	->become($w) ;
-        $arg->type eq $w or Carp::confess "ARG TYPE MISMATCH";
+        OldMote($w)->accept($arg)
+        # $arg->type eq $w
+        or Carp::confess "ARG TYPE MISMATCH";
 #		warn "accepted to get $arg";
         push @args, $arg;
     };

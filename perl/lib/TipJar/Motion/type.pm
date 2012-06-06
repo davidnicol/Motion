@@ -24,7 +24,7 @@ sub import{
 
 sub accept{  # equality, or dispatch to the accept method on the type's package
     my ($self, $other) = @_;
-	$$self eq $other->type and return $self;
+	eval { $$self eq $other->type } and return 1;
 	Carp::cluck "type offered other for acceptance";
 	my ($package) = readscalar($$self);
 	$package->accept($other);
