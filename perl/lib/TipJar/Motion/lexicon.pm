@@ -83,7 +83,8 @@ sub AddTerms{
      ref $k and $k = $k->asSTRING->string;
      my $alreadythere = $self->aa->{"$k"};
      defined $alreadythere and warn "overwriting $k : [$alreadythere]";
-     $self->aa->{$k} = ( ref $v ? $v->moteid : $v )
+     0 and warn "saving $v under name $k into ".$self->comment;
+     $self->aa->{uc $k} = ( ref $v ? $v->moteid : $v )
   };
   $self
 };

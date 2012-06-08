@@ -13,7 +13,7 @@ sub import  { *{caller().'::STRING'} = sub () { __PACKAGE__->type } }
 use TipJar::Motion::configuration;
 BEGIN { *string = accessor('string') }
 use strict;
-sub accept { $_[1]->is_a_string }
+sub accept { my $ret; eval {$ret = $_[1]->is_a_string;1} or Carp::confess $@; $ret }
 
 =head1 the STRING keyword allows the
 following token to be read as a string literal.

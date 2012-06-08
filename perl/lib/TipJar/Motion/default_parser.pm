@@ -24,6 +24,8 @@ sub init{
    $P
 }
 
+sub Unshift { my $P = shift; unshift @{$P->prepend}, @_ }
+
 =pod
 
 this package demonstrates the interface for the motion parser.

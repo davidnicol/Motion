@@ -274,8 +274,36 @@ CODE
 	 bless \$moteid, $alpha  
   }
 };
-  
-  
+
+sub usertype{ my $sponsor = shift; my $code = join "\n", @_;
+
+    # obtain lock
+    begin_work;
+    
+    # create a new mote to hold the code
+    my $new = TipJar::Motion::configuration::base_obj();
+    my $moteid1 = $$new;
+    writescalar($moteid1, $code);
+    
+    # create a new type
+    my $type = new_type( $moteid1 );
+    
+    # set the type
+    set_type($new, $type);
+    
+    # prevent GC race
+    RegisterSponsorship($$sponsor, $moteid1);
+    RegisterSponsorship($moteid1, $type);
+    for ( $code =~ m/OldMote\('(.+?)'\)/g ){
+        RegisterSponsorship($moteid1, $_)
+    };
+    
+    # release lock
+    commit;
+    
+    # return OldMote run on the mote we just made 
+    OldMote($moteid1)
+}  
   
   our $TYPEBASE = OldMote (bootstrap_get 'TYPE TYPE');
 
@@ -373,6 +401,7 @@ sub import{
    *{caller().'::bootstrap_get'} = \&bootstrap_get;
    *{caller().'::new_type'} = \&new_type;
    *{caller().'::set_type'} = \&set_type;
+   *{caller().'::usertype'} = \&usertype;
    *{caller().'::begin_work'} = \&begin_work;
    *{caller().'::commit'} = \&commit;
    *{caller().'::rollback'} = \&rollback;

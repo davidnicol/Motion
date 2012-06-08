@@ -3,7 +3,7 @@ package TipJar::Motion::hereparser;
 use strict;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'HEREPARSER';
-sub process {
+sub process {  #### override this. The important action happens in  parser()
     my ($me, $parser, $string) = @_;
 	my $mote;
 	$parser->sponsor(
@@ -41,8 +41,6 @@ sub parser {
 sub argtypelistref { [ type() ] } # we accept only unblessed strings
 
 sub yield_returnable { die "nonreturnable type" }
-
-# package TipJar::Motion::string::parser;sub DEBUG(){1}
 
 sub get_token($){my $I = shift;
 

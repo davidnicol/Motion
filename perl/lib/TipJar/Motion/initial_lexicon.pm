@@ -52,7 +52,6 @@ sub load_IL{
 	   ##    remember newmote macro name placeholder mote endmacro
 	   ### requiring:
 	   'MACRO'    => TipJar::Motion::macro->new,
-	   'ENDMACRO' => TipJar::Motion::endmacro->new,
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
 	   
 	   
