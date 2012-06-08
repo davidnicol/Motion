@@ -66,5 +66,16 @@ sub process{
     } or Carp::confess "ENGINE: $@";
     ! $input->done
 }
+sub process_all{
+    my ($self) = shift;
+    @_ and carp "process method called with args";
+    my $input = $self->input;
+    my $output = $self->output;
+    my $parser = $self->parser;
+	0&&warn "using parser [$parser]";
+	my @retlist;
+    push @retlist, $parser->next_mote($self) while not $input->done;
+    @retlist
+}
 
 1;

@@ -4,7 +4,7 @@ use strict;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'LEX';
 use TipJar::Motion::AA;  ### associative array mote
-sub DEBUG(){0}
+sub DEBUG(){1}
 =pod
 
 A class that provides a lexicon object, supporting lookup of strings
@@ -154,8 +154,10 @@ sub ParseString{ my  ($lexi, $text) = @_;
    my $input = TipJar::Motion::stream->new($text);
    my $result;
    my $output = TipJar::Motion::stream->new(\$result);
-   
+   my $parser = TipJar::Motion::default_parser->new;
+   $parser->lexicon->outer($lexi);
 
+   TipJar::Motion::engine->new(   $input,$output,$parser   )->process_all
 }
 
 package TipJar::Motion::safe;
