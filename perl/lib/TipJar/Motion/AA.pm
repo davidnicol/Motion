@@ -1,4 +1,50 @@
 
+
+package TipJar::Motion::store;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'STORE';
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+use TipJar::Motion::null;
+sub argtypelistref{ [ANYTHING, STRING, ANYTHING] };
+sub process{
+  my $op = shift;
+  TipJar::Motion::AA::STORE(@_);
+  retnull
+}
+
+package TipJar::Motion::fetch;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'FETCH';
+use TipJar::Motion::string;
+sub argtypelistref{ [ANYTHING, STRING] };
+sub process{
+  my $op = shift;
+  goto &TipJar::Motion::AA::FETCH
+}
+
+package TipJar::Motion::setmote;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'STORESCALAR';
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+use TipJar::Motion::null;
+sub argtypelistref{ [ANYTHING] };
+sub process{
+  my ($op, $mote, $val) = @_;
+  retnull
+}
+
+package TipJar::Motion::fetchmote;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'FETCHSCALAR';
+use TipJar::Motion::string;
+sub argtypelistref{ [STRING] };
+sub process{
+  goto &TipJar::Motion::AA::FETCH
+}
+
+
 package TipJar::Motion::AA;
 use strict;
 sub DEBUG(){0}
