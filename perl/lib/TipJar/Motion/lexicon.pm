@@ -4,7 +4,7 @@ use strict;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'LEX';
 use TipJar::Motion::AA;  ### associative array mote
-sub DEBUG(){1}
+sub DEBUG(){0}
 =pod
 
 A class that provides a lexicon object, supporting lookup of strings

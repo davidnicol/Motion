@@ -54,18 +54,12 @@ sub load_IL{
 	   ### requiring:
 	   'MACRO'    => TipJar::Motion::macro->new,
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
+	   'SETMOTE' => TipJar::Motion::setmote->new,
+	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
 	   
 	   
-## the 2011 test suite:
-#	       name: 'NEWMOTE [name] expands to NAME [name] MOTE',
-#          input: 'NewMOTE nm nm',
-#       expected: '\\d+[A-Za-z]+'
-## defined below       'NEWMOTE' 
-#      
-#           name: 'MOTE as scalar container',
-#          input: 'newmote m setmote m string abcd fetchmote m',
-#       expected: 'abcd'
-#      
+## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl
+
 #           name: 'MOTE as a-a container',
 #          input: 'newmote m store m string def string abcd fetch m def',
 #       expected: 'abcd'

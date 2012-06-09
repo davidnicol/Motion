@@ -309,6 +309,14 @@ sub usertype{ my $sponsor = shift; my $code = join "\n", @_;
   
   our $TYPEBASE = OldMote (bootstrap_get 'TYPE TYPE');
 
+
+
+#################
+#               #
+#    ACCESSOR   #
+#               #
+#################
+
   my %AccessorSlotsByPackage;
   sub accessor(;$){
        ### support inside-out objects via these

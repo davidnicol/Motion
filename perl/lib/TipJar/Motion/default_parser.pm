@@ -100,7 +100,9 @@ sub next_mote{
     if(@$wants){
       my $subparser = $lookup_result->parser($parser);  # used by STRING
       for my $w (@$wants){
+        warn "require operand ".readscalar($w);
         my $arg = $subparser->next_mote($engine);
+        warn "got     operand ".ref($arg);
         readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };

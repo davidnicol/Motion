@@ -29,19 +29,24 @@ use TipJar::Motion::type 'STORESCALAR';
 use TipJar::Motion::string;
 use TipJar::Motion::anything;
 use TipJar::Motion::null;
-sub argtypelistref{ [ANYTHING] };
+sub argtypelistref{ [ANYTHING, ANYTHING] };
 sub process{
-  my ($op, $mote, $val) = @_;
+  my ($op, $P, $mote, $val) = @_;
+  warn "SETMOTE: storing [$val]";
+  $mote->mscalar($val);
   retnull
 }
 
 package TipJar::Motion::fetchmote;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'FETCHSCALAR';
-use TipJar::Motion::string;
-sub argtypelistref{ [STRING] };
+use TipJar::Motion::anything;
+sub argtypelistref{ [ANYTHING] };
 sub process{
-  goto &TipJar::Motion::AA::FETCH
+  my ($op, $P,$mote) = @_;
+  my $result = $mote->mscalar;
+  warn "FETCHMOTE: looked up [$result]";
+  $result
 }
 
 

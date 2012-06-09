@@ -3,6 +3,8 @@ package TipJar::Motion::Mote;
 use strict;
 use Carp;
 use TipJar::Motion::configuration;
+*mscalar = accessor;  # data for SETMOTE and FETCHMOTE
+
 =head1 base class
 
 everything, absolutely everything, in Motion
