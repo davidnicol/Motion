@@ -30,8 +30,12 @@ by default, no operands are needed.
 
 =head2 process
 
-Accept the arguments described in the argtypelistref list and
-return a result mote.
+Arguments: the op, or at least its package name, then
+the current parser running the operation, then
+arguments acceptable to the types listed in the argtypelistref.
+
+Return: a result mote. use the null package and return C<retnull>
+to not add anything to the output.
 
 Base motes return themselves.
 
@@ -47,7 +51,7 @@ sub wants {[]}
 sub argtypelistref {[]}
 sub process { $_[0] }
 sub parser { $_[1] }
-=head2 become
+=head2 become 
 Coerce the invocant to the type named as the argument.
 
 Base motes have one coercion defined, to STRING type,
@@ -64,11 +68,25 @@ sub asSTRING {
 
 Motes persist as long as they are sponsored
 within a motion VM. Motes that are not sponsored
-are ephemeral. Only sponsored motes persist.
+are ephemeral. Only sponsored motes persist through
+a GC event.
+
 The C<sponsor> method is used by the sponsoring
 mote to register sponsorship of another mote.
 Default motes are not capable of sponsorship so
 this method dies.
+
+Types created by using the type package are remembered
+in the bootstrap table, which serves as the roots for
+marking at GC time.
+
+Motes stored as AA data are automatically sponsored by
+the container they are stored in.
+
+Motes stored as instance data are automatically sponsored by
+the mote they are associated with as well.
+
+
 
 =head1 new
 C<new> is used to create a new mote of a type.

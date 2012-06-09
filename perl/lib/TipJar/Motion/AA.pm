@@ -8,19 +8,20 @@ use TipJar::Motion::anything;
 use TipJar::Motion::null;
 sub argtypelistref{ [ANYTHING, STRING, ANYTHING] };
 sub process{
-  my $op = shift;
-  TipJar::Motion::AA::STORE(@_);
+  my ($op, $P, $mote, $name, $val) = @_;
+  TipJar::Motion::AA::STORE($mote, $name->string, $val);
   retnull
 }
 
 package TipJar::Motion::fetch;
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::type 'FETCH';
+use TipJar::Motion::anything;
 use TipJar::Motion::string;
 sub argtypelistref{ [ANYTHING, STRING] };
 sub process{
-  my $op = shift;
-  goto &TipJar::Motion::AA::FETCH
+  my ($op, $P, $mote, $name) = @_;
+  TipJar::Motion::AA::FETCH($mote, $name->string)
 }
 
 package TipJar::Motion::setmote;

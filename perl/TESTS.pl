@@ -1,5 +1,6 @@
 
 @tests = (
+
               'string ThisIsaString', 'ThisIsaString',
               'another','another',
               'nothing','',
@@ -15,9 +16,16 @@
               
               'NewMOTE nm nm','\S{25}',
               
-              'newmote m setmote m string abcd fetchmote m', 'abcd',
+              'newmote m setmote m abcd fetchmote m', 'abcd',
 
 
+#           name: 'MOTE as a-a container',
+ 'newmote m store m string def string abcd fetch m def', 'abcd',
+#      
+#           name: 'name creates alias to an already named thing',
+#          input: 'newmote nm name m nm astore m string 5 string abcd afetch m 5',
+#       expected: 'abcd'
+#      
 
 );
 
@@ -32,6 +40,7 @@ while (@tests){
     $output =~ m/^\s*$expected\s*$/ and next;
     $fails++;
     print "FAILED TEST $counter\n";
+    print "INPUT    [$input]\n";
     print "EXPECTED [$expected]\n";
     print "     GOT [$output]\n";
 };

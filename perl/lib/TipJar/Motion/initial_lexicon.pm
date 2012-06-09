@@ -56,18 +56,12 @@ sub load_IL{
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
 	   'SETMOTE' => TipJar::Motion::setmote->new,
 	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
+	   'STORE' => TipJar::Motion::store->new,
+	   'FETCH' => TipJar::Motion::fetch->new,
 	   
 	   
 ## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl
 
-#           name: 'MOTE as a-a container',
-#          input: 'newmote m store m string def string abcd fetch m def',
-#       expected: 'abcd'
-#      
-#           name: 'name creates alias to an already named thing',
-#          input: 'newmote nm name m nm astore m string 5 string abcd afetch m 5',
-#       expected: 'abcd'
-#      
 #           name: 'MOTE yields mote id',
 #          input: 'MOTE',
 #       expected: '\\d+[A-Za-z]+'

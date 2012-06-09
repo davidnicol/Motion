@@ -112,7 +112,10 @@ where sponsee = (select row from motes where moteid=?)
 and   sponsor = (select row from motes where moteid=?) 
 SQL
 
+use feature 'state';
 sub RegisterSponsorship{ my ($sponsor_mid, $sponsee_mid) = @_;
+     state %_RScache;
+     $_RScache{join "-", @_}++ or
      $sponsor_sth->execute($sponsee_mid, $sponsor_mid);
 }
 sub RemoveSponsorship{ my ($sponsor_mid, $sponsee_mid) = @_;
@@ -170,7 +173,7 @@ SQL
 update motes set mark = (select count(1) from sponsorship where sponsor = motes.row)
 SQL
    commit;
-   warn "WEIGHT: @$_\n" for @{$dbh->selectall_arrayref(<<SQL)};
+   0&&warn "WEIGHT: @$_\n" for @{$dbh->selectall_arrayref(<<SQL)};
 select m.moteid, m.mark, t.scalar from motes m, motes t
 where m.type = t.row
 order by m.mark desc   
@@ -226,7 +229,7 @@ sub aa_delete($$){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
     my $rows =
     $aa_delete_sth->execute($_[0],$_[1])
-    ; warn "deleted $rows rows ($_[1])"
+    ; 0&&warn "deleted $rows rows ($_[1])"
 }
 my $aa_clear_sth = $dbh->prepare('delete from aadata where mote = (select row from motes where moteid=?)');
 sub aa_clear($){
