@@ -89,6 +89,16 @@ sub AddTerms{
   $self
 };
 
+sub Delete{
+  my $self = shift;
+  while (@_){
+    my $k = shift;
+     ref $k and $k = $k->asSTRING->string;
+     delete $self->aa->{"$k"};
+  };
+  $self
+};
+
 sub explode{ %{ $_[0]->aa } }
 
 my $commentcounter='a';

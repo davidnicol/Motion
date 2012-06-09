@@ -224,7 +224,9 @@ sub aa_set($$$){
 my $aa_delete_sth = $dbh->prepare('delete from aadata where mote = (select row from motes where moteid=?) and k =?');
 sub aa_delete($$){
     looks_like_moteid($_[0]) or Carp::confess('[$_[0]] does not look like a moteid');
+    my $rows =
     $aa_delete_sth->execute($_[0],$_[1])
+    ; warn "deleted $rows rows ($_[1])"
 }
 my $aa_clear_sth = $dbh->prepare('delete from aadata where mote = (select row from motes where moteid=?)');
 sub aa_clear($){

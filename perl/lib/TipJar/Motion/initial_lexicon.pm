@@ -31,6 +31,7 @@ sub load_IL{
        'MOTE' => TipJar::Motion::Mote_constructor->new,
 	   #REMEMBER  op to store a name into the immediately outer scope, same syntax as NAME
 	   'REMEMBER' =>  TipJar::Motion::remember->new,
+	   'FORGET'   => TipJar::Motion::forget->new,
 	   #SEQUENCE  creates a new template that takes args
 	   #PERFORM   fill and run a SEQUENCE
 	   #TYPE      creates a new type

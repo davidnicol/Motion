@@ -34,6 +34,19 @@ sub process { my ($op, $parser, $name, $thing) = @_;
   retnull
 }
 
+package TipJar::Motion::forget;
+use TipJar::Motion::type 'FORGET';
+use parent 'TipJar::Motion::name';
+use TipJar::Motion::null;
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+use TipJar::Motion::null;
+sub argtypelistref{ [STRING] };
+sub process { my ($op, $parser, $name, $thing) = @_;
+  $parser->lexicon->outer->Delete(uc $name->string);
+  retnull
+}
+
 
 1;
 
