@@ -5,6 +5,19 @@ use TipJar::Motion::type 'STRINGLIT';
 sub argtypelistref {[]}
 sub process {$_[0]}
 sub is_a_string { 1 }
+
+package TipJar::Motion::gensym;  # symbol creator
+our @ISA = qw/TipJar::Motion::Mote/;
+use TipJar::Motion::type 'GENSYM';
+sub argtypelistref {[]}
+sub process {
+     my ($A,$B,$C) = map{ int(99999 + rand(9999999)) }(1,2,3);
+     my $r = TipJar::Motion::stringliteral->new;
+     $r->string("gs${A}gs${B}gs${C}");
+     $r
+}
+
+
 sub UNIVERSAL::is_a_string { 0 }
 package TipJar::Motion::string;
 use parent TipJar::Motion::Mote;

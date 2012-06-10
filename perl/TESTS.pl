@@ -1,5 +1,7 @@
-
+$MRX = '\\b[0-9A-Z*=~$]{25}\\b';  # Moteid REGEX
 @tests = (
+
+              'mote', $MRX,
 
               'string ThisIsaString', 'ThisIsaString',
               'another','another',
@@ -14,15 +16,22 @@
               
               
               
-              'NewMOTE nm nm','\S{25}',
+              'NewMOTE nm nm',$MRX,
               
               'newmote m setmote m abcd fetchmote m', 'abcd',
 
               'newmote m store m string def string abcd fetch m def', 'abcd',
       
-#        name creates alias to an already named thing, also array data access
-             'newmote nm name m nm astore m string 5 string abcd afetch nm 5','abcd',
+              'newmote nm name m nm astore m string 5 string abcd afetch nm 5','abcd',
       
+
+
+              'string string', 'string', # '"STRING" escapes reserved word'
+
+               'heredoc x abc def x', 'abc def',
+               #           name: 'GENSYM',
+              ' Gensym',  'gs\\d+gs\\d+gs\\d+',
+
 
 );
 

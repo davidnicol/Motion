@@ -60,49 +60,13 @@ sub load_IL{
 	   'FETCH' => TipJar::Motion::fetch->new,
 	   'ASTORE' => TipJar::Motion::astore->new,
 	   'AFETCH' => TipJar::Motion::afetch->new,
+	   'GENSYM' => TipJar::Motion::gensym->new,
 	   
 	   
 ## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl
 
-#           name: 'MOTE yields mote id',
-#          input: 'MOTE',
-#       expected: '\\d+[A-Za-z]+'
+
 #      
-#           name: 'MOTE as scalar container',
-#          input: 'name m MOTE setmote m string abcd fetchmote m',
-#       expected: 'abcd'
-#      
-#           name: 'MOTE as a-a container',
-#          input: 'name m MOTE store m string def string abcd fetch m def',
-#       expected: 'abcd'
-#      
-#           name: 'MOTE as array container',
-#          input: 'name m MOTE astore m string 5 string abcd afetch m 5',
-#       expected: 'abcd'
-#      
-#           name: 'NOTHING',
-#          input: 'abc nothing def',
-#       expected: 'abc def'
-#      
-#           name: 'placeholder is an error',
-#          input: ' placeholder x',
-#       expected: 'FAIL PLACEHOLDER_INVOKED_OUTSIDE_OF_SEQUENCE_DEFINITION x'
-#      
-#           name: 'GENSYM',
-#          input: ' Gensym',
-#       expected: 'gs\\d+gs\\d+gs\\d+'
-#      
-#           name: '"STRING" escapes reserved word',
-#          input: 'string string',
-#       expected: 'string'
-#     
-#           name: 'unknown keywords pass through unchanged',
-#          input: 'abcd',
-#       expected: 'abcd'
-#     
-#           name: 'heredoc',
-#          input: 'heredoc x abc def x',
-#       expected: 'abc def'
 #     
 #           name: 'only listed symbols are available within safe',
 #          input: 'name a aa name b bb perform safe a begin a b end',
