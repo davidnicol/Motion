@@ -18,14 +18,11 @@
               
               'newmote m setmote m abcd fetchmote m', 'abcd',
 
-
-#           name: 'MOTE as a-a container',
- 'newmote m store m string def string abcd fetch m def', 'abcd',
-#      
-#           name: 'name creates alias to an already named thing',
-#          input: 'newmote nm name m nm astore m string 5 string abcd afetch m 5',
-#       expected: 'abcd'
-#      
+              'newmote m store m string def string abcd fetch m def', 'abcd',
+      
+#        name creates alias to an already named thing, also array data access
+             'newmote nm name m nm astore m string 5 string abcd afetch nm 5','abcd',
+      
 
 );
 

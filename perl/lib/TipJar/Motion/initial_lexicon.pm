@@ -58,6 +58,8 @@ sub load_IL{
 	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
 	   'STORE' => TipJar::Motion::store->new,
 	   'FETCH' => TipJar::Motion::fetch->new,
+	   'ASTORE' => TipJar::Motion::astore->new,
+	   'AFETCH' => TipJar::Motion::afetch->new,
 	   
 	   
 ## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl

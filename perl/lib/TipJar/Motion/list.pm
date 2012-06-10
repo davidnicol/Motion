@@ -1,4 +1,34 @@
 
+sub TipJar::Motion::arr_init{
+   my $L = $_[0]->marrslot;
+   $L and return $L;
+   $_[0]->marrslot(TipJar::Motion::list->new)
+}
+
+package TipJar::Motion::astore;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'aSTORE';
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+use TipJar::Motion::null;
+sub argtypelistref{ [ANYTHING, STRING, ANYTHING] };
+sub process{
+  my ($op, $P, $mote, $index, $val) = @_;
+  ${TipJar::Motion::arr_init($mote)}[int $index->string] = $val;
+  retnull
+}
+
+package TipJar::Motion::afetch;
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::type 'aFETCH';
+use TipJar::Motion::anything;
+use TipJar::Motion::string;
+sub argtypelistref{ [ANYTHING, STRING] };
+sub process{
+  my ($op, $P, $mote, $index) = @_;
+  ${TipJar::Motion::arr_init($mote)}[int $index->string];
+}
+
 
 package TipJar::Motion::list;
 use TipJar::Motion::type 'LIST';
