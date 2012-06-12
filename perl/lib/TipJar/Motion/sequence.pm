@@ -130,7 +130,9 @@ sub argtypelistref{ [TipJar::Motion::sequencetype::type()] }
 sub process{ my ($op, $P, $Seq) = @_;
     my $wants = $Seq->argtypelistref;
     warn "Performing sequence, want [@$wants]";
-    my @Filled = $Seq->perform($P->getargs($Seq->argtypelistref));
+    my @args = $P->getargs($Seq->argtypelistref);
+    warn "got sequence args [@args]";
+    my @Filled = $Seq->perform(@args);
     warn "perform yielded [@Filled]";
     $P->Unshift(@Filled);
     retnull
@@ -139,7 +141,8 @@ sub process{ my ($op, $P, $Seq) = @_;
 
 ### VERY SIMILAR TO MACRO DEFINED ABOVE BUT WITH SOME DIFFERENCES
 package TipJar::Motion::sequence;
-use parent TipJar::Motion::hereparser;
+use strict;
+use parent 'TipJar::Motion::hereparser';
 use TipJar::Motion::type 'SEQ CONS';
 
 use TipJar::Motion::anything;  ### ANYTHING and PERLSTRING types
@@ -161,12 +164,25 @@ sub perform{ my ($self, @args) = @_;         # support PERFORM verb
    my @Motes;
 PREAMBLE
 
-   $ocode .= join " ",'#LINE',__LINE__,__FILE__,"\n";
+   my $icode2 = $icode;
+   $icode2 =~ s/^/###   /mg;
+   $ocode .= <<SOURCE;
+### SOURCE:
+$icode2   
+SOURCE
+
    my @ARGTYPELIST;
+   my ($i,$max_i);
    while ($icode){  # the RAMBLE
         $icode =~ s/\s*(\S+)// or last;
         my $token = $1;
         warn "seq cons got token [$token]";
+      if ($token =~ /^:(\d+)$/){
+               $i = $1 - 1;
+               $i > $max_i and $max_i = $i;
+               $ocode .= "push \@Motes, \$args[$i];\n";
+        
+      }else{
         my $lr = $parser->lexicon->lookup(uc $token);
         warn "seq cons got mote [$lr]";
         ref $lr or Carp::confess "barewords not allowed in sequences: '$token' was not found";
@@ -178,12 +194,17 @@ PREAMBLE
                $ocode .= "push \@Motes, OldMote('$$lr');\n";
                $ocode .= "warn qq{ after including $$lr, retlist now [\@Motes]};\n";
         };
+      }
+   };
+   if (defined $i){
+       @ARGTYPELIST and die "PLACEHOLDER STYLES MAY NOT MIX";
+       @ARGTYPELIST = (ANYTHING) x (1 + $max_i)
    };
    $ocode .= <<'POSTAMBLE';
  @Motes  # the PERFORM verb unshifts this into parser->prepend
 }
 POSTAMBLE
-    $ocode .= "sub argtypelistref { [ qw/@ArgTypes/ ] }\n";
+    $ocode .= "sub argtypelistref { [ qw/@ARGTYPELIST/ ] }\n";
     my $newSeq = TipJar::Motion::configuration::usertype( $parser, $ocode);
     $newSeq->sponsor($_) for @SPONSORME;
     $newSeq;

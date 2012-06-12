@@ -56,18 +56,20 @@ By default, the parser reads a series of Crockford characters
 
 
 
+my $depth = 0;
 sub getargs{ my ($subparser, $engine, $wants) = @_;
       my @args;
+      my $i; $depth++;
 eval {
-      for my $w (@$wants){
-        warn "we want a $w";
-        warn "require operand ".readscalar($w);
+      for my $w (@$wants){ ++$i;
+        warn ">>> $depth $i $w require operand ".readscalar($w);
         my $arg = $subparser->next_mote($engine);
-        warn "got     operand ".ref($arg);
+        warn "<<< $depth $i $w got operand ".ref($arg);
         readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };1
 } or Carp::confess "getargs: $@";
+      $depth--;
       @args
 };
 
