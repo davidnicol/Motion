@@ -13,22 +13,29 @@ Semantically, they are different:
 
 Macros expand immediately and their bodies are prepended to the parser's mote stream.
 
-Sequences are compound ops, which take zero or more args and give one mote, when activated
-by the "PERFORM" operator. Otherwise, they evaluate to their moteids.
+Sequences are are macros that can be treated as objects. Like macros, they take zero
+or more args and their results are prepended to the parser's mote stream. Unlike
+macros, they must be activated by the "PERFORM" operator.
 
-Macros save names to the immediate lexicon.
+Without "PERFORM" they evaluate to their moteids.
 
+Also, where Macros save names to the immediate lexicon,
 Sequences save to their own local scope, and remember to the scope where they were
 defined.
+
+As Macros have immediate effect, they cannot be passed as arguments, while
+sequences can. So Macros have definite types for their arg lists, and Sequences
+only know they number of their arg types.
 
 Internally, the results of these constructors are user types, with package
 names based on their moteIDs, and package code strings that are evalled
 at thaw time.
 
+PLACEHOLDER does not take an arg like in the previous prototype:
+it works like a ? in a SQL statement definition. if you want to name it, do something
+like C<name arg1 placeholder> and then use it as C<arg1>.
+
 =cut
-
-my @Scopes; # strictly a compile-time construct, need not persist
-
 
 package TipJar::Motion::placeholder;
 use parent TipJar::Motion::Mote;
@@ -108,9 +115,78 @@ POSTAMBLE
     
 }
 
+package TipJar::Motion::sequencetype; # a type for perform to require
+use parent TipJar::Motion::Mote;
+use TipJar::Motion::type 'SEQTYPE';
+sub UNIVERSAL::is_a_sequence{0}
+sub accept {  $_[1]->is_a_sequence  } # $_[0] got us here
+
+
+package TipJar::Motion::perform; # PERFORM: op to perform a sequence
+use parent TipJar::Motion::Mote;
+use TipJar::Motion::type 'PERFORM OP';
+use TipJar::Motion::null;  ### retnull
+sub argtypelistref{ [TipJar::Motion::sequencetype::type()] }
+sub process{ my ($op, $P, $Seq) = @_;
+    my $wants = $Seq->argtypelistref;
+    warn "Performing sequence, want [@$wants]";
+    my @Filled = $Seq->perform($P->getargs($Seq->argtypelistref));
+    warn "perform yielded [@Filled]";
+    $P->Unshift(@Filled);
+    retnull
+}
+
+
+### VERY SIMILAR TO MACRO DEFINED ABOVE BUT WITH SOME DIFFERENCES
 package TipJar::Motion::sequence;
 use parent TipJar::Motion::hereparser;
 use TipJar::Motion::type 'SEQ CONS';
 
+use TipJar::Motion::anything;  ### ANYTHING and PERLSTRING types
+sub argtypelistref{ [PERLSTRING] }
+sub process {
+   my $constructor = shift;
+   my $parser = shift;
+   my $icode = ''.shift;
+   my @SPONSORME;
+
+   my $ocode = <<'PREAMBLE';
+
+use strict;
+our @ISA = qw'TipJar::Motion::Mote';
+sub is_a_sequence{1}
+use TipJar::Motion::configuration;  ### OldMote
+sub accept{0};  ### sequence definitions are not usable as types at this time
+sub perform{ my ($self, @args) = @_;         # support PERFORM verb
+   my @Motes;
+PREAMBLE
+
+   $ocode .= join " ",'#LINE',__LINE__,__FILE__,"\n";
+   my @ARGTYPELIST;
+   while ($icode){  # the RAMBLE
+        $icode =~ s/\s*(\S+)// or last;
+        my $token = $1;
+        warn "seq cons got token [$token]";
+        my $lr = $parser->lexicon->lookup(uc $token);
+        warn "seq cons got mote [$lr]";
+        ref $lr or Carp::confess "barewords not allowed in sequences: '$token' was not found";
+        if ($lr->is_placeholder){
+               push @ARGTYPELIST, ANYTHING;
+               $ocode .= "push \@Motes, shift \@args;\n";
+        }else{
+               push @SPONSORME, $lr;
+               $ocode .= "push \@Motes, OldMote('$$lr');\n";
+               $ocode .= "warn qq{ after including $$lr, retlist now [\@Motes]};\n";
+        };
+   };
+   $ocode .= <<'POSTAMBLE';
+ @Motes  # the PERFORM verb unshifts this into parser->prepend
+}
+POSTAMBLE
+    $ocode .= "sub argtypelistref { [ qw/@ArgTypes/ ] }\n";
+    my $newSeq = TipJar::Motion::configuration::usertype( $parser, $ocode);
+    $newSeq->sponsor($_) for @SPONSORME;
+    $newSeq;
+}
 
 1;

@@ -49,6 +49,7 @@ sub yield_returnable { $_[0]->string }
 sub become { $_[0] };
 
 package TipJar::Motion::string::parser;
+use parent 'TipJar::Motion::default_parser';
 sub next_mote{
     my ($pack,$engine) = @_;
     

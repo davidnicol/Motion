@@ -23,7 +23,12 @@ sub init{
    $P->prepend($P->sponsor(TipJar::Motion::list->new));
    $P
 }
-
+sub inner_scope{
+  my $P = shift;
+  my $new = $P->new;
+  $new->lexicon->outer($P->lexicon);
+  $new
+}
 sub Unshift { my $P = shift; unshift @{$P->prepend}, @_ }
 
 =pod
@@ -50,18 +55,26 @@ By default, the parser reads a series of Crockford characters
 =cut
 
 
-sub next_mote{
-    my $parser = shift;
-    my $engine = shift;
+
+sub getargs{ my ($subparser, $engine, $wants) = @_;
+      my @args;
+eval {
+      for my $w (@$wants){
+        warn "we want a $w";
+        warn "require operand ".readscalar($w);
+        my $arg = $subparser->next_mote($engine);
+        warn "got     operand ".ref($arg);
+        readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
+        push @args, $arg;
+      };1
+} or Carp::confess "getargs: $@";
+      @args
+};
+
+
+sub get_mote{ my $parser = shift; my $engine = shift;
+    ref $parser or Carp::confess( "$parser is not a real parser object");
     my $lookup_result;
-    DEBUG and warn "checkpoint";
-    my $prepend = $parser->prepend;
-	# warn "prepend should be a list object. It's a ".ref($prepend);
-   if (@$prepend){
-    DEBUG and warn "checkpoint";
-         $lookup_result = shift @$prepend;
-		 goto HAVE_LR;
-   }
     DEBUG and warn "checkpoint";
     my $c;
     my $string = '';
@@ -79,8 +92,7 @@ sub next_mote{
        # DEBUG and
 	   warn "input token: [$string]";
     $lookup_result = $parser->lexicon->lookup($string);
-   
-    DEBUG and warn "checkpoint";
+    warn "checkpoint";
     unless($lookup_result){
 	    my $X = TipJar::Motion::configuration::OldMote($orig_string);
 		if (not ref $X){
@@ -89,7 +101,16 @@ sub next_mote{
 		}
  	    $lookup_result = $X
 	};
-	HAVE_LR:
+	warn "get_mote returning $lookup_result";
+	$lookup_result
+}
+sub next_mote{
+    my $parser = shift;
+    my $engine = shift;
+    DEBUG and warn "checkpoint";
+    my $prepend = $parser->prepend;
+	# warn "prepend should be a list object. It's a ".ref($prepend);
+    my $lookup_result = ( shift @$prepend or $parser->get_mote($engine) );
 	$parser->sponsor($lookup_result);
       # DEBUG and
 	  warn "found lookup_result $lookup_result";
@@ -97,16 +118,7 @@ sub next_mote{
     my $wants = $lookup_result->argtypelistref;
     DEBUG and warn "checkpoint";
     my @args;
-    if(@$wants){
-      my $subparser = $lookup_result->parser($parser);  # used by STRING
-      for my $w (@$wants){
-        warn "require operand ".readscalar($w);
-        my $arg = $subparser->next_mote($engine);
-        warn "got     operand ".ref($arg);
-        readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
-        push @args, $arg;
-      };
-    };
+    @$wants and @args = $lookup_result->parser($parser)->getargs($engine, $wants);
     DEBUG and warn "checkpoint";
     unshift @$prepend, $lookup_result->process($parser,@args);
     # warn "parser output list: [@$prepend]";
@@ -115,4 +127,5 @@ sub next_mote{
 	DEBUG and warn "returning $nextmote";
 	$nextmote
 }
+
 1;

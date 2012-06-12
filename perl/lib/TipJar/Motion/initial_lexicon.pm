@@ -53,6 +53,8 @@ sub load_IL{
 	   ##    remember newmote macro name placeholder mote endmacro
 	   ### requiring:
 	   'MACRO'    => TipJar::Motion::macro->new,
+	   'SEQUENCE'    => TipJar::Motion::sequence->new,
+	   'PERFORM'    => TipJar::Motion::perform->new,
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
 	   'SETMOTE' => TipJar::Motion::setmote->new,
 	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
@@ -66,12 +68,6 @@ sub load_IL{
 ## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl
 
 
-#      
-#     
-#           name: 'only listed symbols are available within safe',
-#          input: 'name a aa name b bb perform safe a begin a b end',
-#       expected: 'aa b'
-#     
 #           name: 'safe syntax',
 #          input: 'name a aa name b bb perform safe a begin a b',
 #       expected: '[\\s\\S]+SYNTAX[\\s\\S]+'
@@ -96,17 +92,7 @@ sub load_IL{
 #          input: 'a name',
 #       expected: 'a fail name_missing_name'
 #     
-#           name: 'perform a named sequence',
-#          input: 'name q sequence x abcdef x perform Q',
-#       expected: 'abcdef'
-#     
-#           name: 'placeholder in a sequence',
-#          input: 'perform sequence x a placeholder a b A e x cd',
-#       expected: 'a b cd e'
-#     
-#           name: 'placeholder layering',
-#          input: 'name s1 sequence x placeholder S perform S test x name inner sequence h placeholder i we got i , i is what we got h perform s1 inner',
-#       expected: 'we got test , test is what we got'
+
      
    
    

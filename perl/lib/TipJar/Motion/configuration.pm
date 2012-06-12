@@ -341,6 +341,7 @@ SQL
 SQL
        sub {
               my $mote = shift;
+              eval {$$mote;1} or Carp::confess "accessing non-mote";
 	          # warn "accessing $package$slot $optional_comment: $mote : $$mote : @_\n";		  
               if(@_){
 			      my $datum = shift;
