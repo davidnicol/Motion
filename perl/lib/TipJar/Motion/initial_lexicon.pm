@@ -30,8 +30,8 @@ sub load_IL{
 	   'NAME' =>  TipJar::Motion::name->new,
        'MOTE' => TipJar::Motion::Mote_constructor->new,
 	   #REMEMBER  op to store a name into the immediately outer scope, same syntax as NAME
-	   'REMEMBER' =>  TipJar::Motion::remember->new,
-	   'FORGET'   => TipJar::Motion::forget->new,
+	   'REMEMBER0' =>  TipJar::Motion::remember->new, # will be replaced with REMEMBER
+	   'FORGET0'   => TipJar::Motion::forget->new, # will be replaced with FORGET
 	   #SEQUENCE  creates a new template that takes args
 	   #PERFORM   fill and run a SEQUENCE
 	   #TYPE      creates a new type
@@ -40,7 +40,6 @@ sub load_IL{
 	   #HANDLE
 	   #LIBRARY op to insert a lexicon into the current lexicon chain (AddLex method)
 	   #WORKSPACE op to construct a new workspace under the current one
-	   'WS1' => TipJar::Motion::workspace->new,
 	   'WORKSPACE' => TipJar::Motion::workspace_constructor->new,
 	   #OUTER op to obtain the moteID of the outer workspace that REMEMBER saves names into
 	   #SAFE  op to create a limited workspace
@@ -56,6 +55,7 @@ sub load_IL{
 	   'SEQUENCE'    => TipJar::Motion::sequence->new,
 	   'PERFORM'    => TipJar::Motion::perform->new,
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
+	   '?' => TipJar::Motion::placeholder->new,
 	   'SETMOTE' => TipJar::Motion::setmote->new,
 	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
 	   'STORE' => TipJar::Motion::store->new,
@@ -98,9 +98,21 @@ sub load_IL{
    
    );
    ##### initial motes defined in terms of core motes
-   $l->ParseString(<<PHASE2);
-remember newmote macro X name placeholder mote X
+   my @LPSresult = $l->ParseString(<<PHASE2);
+name remember macro X remember0 string X
+remember remember
+name forget macro X forget0 string X
+remember forget
+forget remember0
+forget forget0
+
+name newmote macro X name ? mote X
+remember newmote
+
+name ws1 workspace
+remember ws1
 PHASE2
+   grep { ref $_ ne 'TipJar::Motion::null' } @LPSresult and die @LPSresult;
    $l
 }
 

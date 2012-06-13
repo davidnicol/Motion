@@ -126,6 +126,7 @@ package TipJar::Motion::perform; # PERFORM: op to perform a sequence
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'PERFORM OP';
 use TipJar::Motion::null;  ### retnull
+use TipJar::Motion::scopeutil;  ### PUSHSCOPE, POPSCOPE
 sub argtypelistref{ [TipJar::Motion::sequencetype::type()] }
 sub process{ my ($op, $P, $Seq) = @_;
     my $wants = $Seq->argtypelistref;
@@ -134,7 +135,7 @@ sub process{ my ($op, $P, $Seq) = @_;
     warn "got sequence args [@args]";
     my @Filled = $Seq->perform(@args);
     warn "perform yielded [@Filled]";
-    $P->Unshift(@Filled);
+    $P->Unshift(PUSHSCOPE,@Filled,POPSCOPE);
     retnull
 }
 
@@ -183,7 +184,9 @@ SOURCE
                $ocode .= "push \@Motes, \$args[$i];\n";
         
       }else{
-        my $lr = $parser->lexicon->lookup(uc $token);
+        warn "looking up token [$token]";
+        $token = uc $token;
+        my $lr = $parser->lexicon->lookup($token);
         warn "seq cons got mote [$lr]";
         ref $lr or Carp::confess "barewords not allowed in sequences: '$token' was not found";
         if ($lr->is_placeholder){

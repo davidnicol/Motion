@@ -56,8 +56,7 @@ sub outer{
    my %seen;
    my $x = $L;
    while (defined $x){
-   DEBUG and
-      warn "outertrace: ".$x->comment()."\n";
+      DEBUG and warn "outertrace: ".$x->comment()."\n";
       $seen{"$x"}++ and Carp::confess "OUTER LEXICON LOOP REJECTED";
       $x = $x->_outer
    };
@@ -123,8 +122,7 @@ sub innerlookup {
   my $seen = shift;
   my $l = $self->aa;
   if(exists $l->{$term}){
-   DEBUG and
-         warn "found [$term] in ".$self->comment().'.';
+   DEBUG and warn "found [$term] in ".$self->comment().'.';
          return $l->{$term}
   };
   # warn "failed to find [$term] among [@{[sort keys %$l]}]";

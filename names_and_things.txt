@@ -19,3 +19,16 @@ the result of a SAFE [keyword-list] [sequence] operation is
 that lexicon, allowing SAFE to be used to construct lexicon
 objects.
 
+Reference:
+
+NAME name thing
+
+stores the thing into the parser's current lexicon under the name. Name must be a string.
+
+REMEMBER name
+
+Copies the thing in the parser's current lexicon, if any, to the outer lexicon.
+
+FORGET name
+
+Deletes the lexicon entry for name in both the current and outer lexicons.

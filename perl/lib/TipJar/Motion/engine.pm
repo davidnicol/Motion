@@ -64,7 +64,7 @@ sub process{
 		  DEBUG and warn "checkpoint";
       1
     } or Carp::confess "ENGINE: $@";
-    ! $input->done
+    ! $parser->done($self)
 }
 sub process_all{
     my ($self) = shift;
@@ -74,7 +74,7 @@ sub process_all{
     my $parser = $self->parser;
 	0&&warn "using parser [$parser]";
 	my @retlist;
-    push @retlist, $parser->next_mote($self) while not $input->done;
+    push @retlist, $parser->next_mote($self) while not $parser->done($self);
     @retlist
 }
 

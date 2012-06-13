@@ -9,9 +9,9 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
               "name p1 string persists p1", "persists",
               "p1 ", "p1",
 # 6
-              "remember p2 string persists p2", "persists",
+              "name p2 string persists remember p2 p2", "persists",
               "p2","persists",
-              "then forget string p2 done","then done",
+              "then forget p2 done","then done",
               "p2","p2" ,
               
  #10             
@@ -43,7 +43,11 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  # a sequence with a placeholder
  'sequence Y placeholder Y', $MRX,
  # remember a sequence
- 'remember sq1 sequence voom placeholder voom sq1', $MRX,
+ 'forget sq1 name sq1
+       sequence voom placeholder voom
+  sq1
+  remember sq1', $MRX,
+  # perform a remembered sequence
  'perform sq1 boing nothing','boing',
  
 #           name: 'placeholder layering',
@@ -58,7 +62,10 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  
  
               # 'only listed symbols are available within safe',
-              'name a alpha name b zzz perform safe a begin a b end', 'alpha b',
+              # safe takes ... what, exactly? a lex, then a heredoc?
+              # define begin and end as scopers?
+              # hmmm..... 
+              # 'name a alpha name b zzz perform safe a begin a b end', 'alpha b',
 #     
 
 
@@ -66,10 +73,10 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
 
 $fails = 0;
 while (@tests){
-    $counter > 22 and last;
+    # $counter > 22 and last;
     my $input = shift @tests;
     my $expected = shift @tests;
-    my $output = `echo $input | /usr/bin/perl Motion.pl`;
+    my $output = `echo '$input' | /usr/bin/perl Motion.pl`;
     s/\s+/ /g for ($expected, $output);
     $counter++;
     $output =~ m/^\s*$expected\s*$/ and next;

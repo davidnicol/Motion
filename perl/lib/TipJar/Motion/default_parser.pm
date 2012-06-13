@@ -64,7 +64,7 @@ eval {
       for my $w (@$wants){ ++$i;
         warn ">>> $depth $i $w require operand ".readscalar($w);
         my $arg = $subparser->next_mote($engine);
-        warn "<<< $depth $i $w got operand ".ref($arg);
+        warn "<<< $depth $i $w got operand ".(ref($arg)||'NONREF');
         readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };1
@@ -103,7 +103,7 @@ sub get_mote{ my $parser = shift; my $engine = shift;
 		}
  	    $lookup_result = $X
 	};
-	warn "get_mote returning $lookup_result";
+	# warn "get_mote returning $lookup_result";
 	$lookup_result
 }
 sub next_mote{
@@ -130,4 +130,8 @@ sub next_mote{
 	$nextmote
 }
 
+sub done{ my ($P, $E) = @_;
+  ! exists ${$P->prepend}[0]
+  and $E->input->done
+}
 1;

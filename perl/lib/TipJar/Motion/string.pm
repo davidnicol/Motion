@@ -34,7 +34,9 @@ This requires an alternative parser.
 
 
 =cut
-sub parser { 
+sub parser { my ($op, $parser) = @_; 
+    # leave a prepend stack alone
+    $parser->prepend->[0] and return $parser;
     # warn "returning string parser package name";
     'TipJar::Motion::string::parser';
 
