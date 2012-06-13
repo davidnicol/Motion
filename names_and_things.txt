@@ -32,3 +32,15 @@ Copies the thing in the parser's current lexicon, if any, to the outer lexicon.
 FORGET name
 
 Deletes the lexicon entry for name in both the current and outer lexicons.
+
+** IMPORTANT:  do not prefix the name in the REMEMBER and FORGET operators
+with the STRING string-escaping operator. They have that built into them, and
+doing so will overwrite or erase the STRING operator.
+
+LIST
+
+list all available names in the current parser's lexicon, by level
+
+WORKSPACE
+
+creates and returns a new workspace mote one in from the current scope

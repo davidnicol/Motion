@@ -10,7 +10,7 @@ the type mote sponsors the workspaces, so they don't get GCd
 =cut
 
 use parent TipJar::Motion::lexicon;
-use TipJar::Motion::type 'WORKSPACE';
+use TipJar::Motion::type 'WORKSPACE CONS';
 
 my $typemote = bless \ do { my $T = type() }, 'TipJar::Motion::Mote';
 
@@ -23,21 +23,19 @@ sub init {
 sub resign { $typemote -> unsponsor( shift ) }  # after this, should be cleaned on next GC
 
 use strict;
-sub process{ my ($W,$P) = @_;
-   $W->comment("workspace within ".$P->lexicon->comment);
+sub process{ my ($W,$P) = @_; # overwrite parser's workspace
    $P->sponsor($W);
-   $W->outer($P->lexicon);
-   $P->lexicon($W);
+   $P->lexicon($W); # overwrite previous workspace
    TipJar::Motion::null->new
 }
 package TipJar::Motion::workspace_constructor;
 use TipJar::Motion::type 'WSCONS';
 use parent 'TipJar::Motion::Mote';
-sub process{ my ($self,$P) = @_;
-    my $W = TipJar::Motion::workspace->new();
+sub process{ my ($self,$P) = @_;  # create a new workspace linked to current 
+   my $W = TipJar::Motion::workspace->new();
+   $W->comment("workspace within ".$P->lexicon->comment);
    $P->sponsor($W);
    $W->outer($P->lexicon);
-   $P->lexicon($W);
    $W
 }
 

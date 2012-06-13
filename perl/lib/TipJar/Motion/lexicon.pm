@@ -36,6 +36,7 @@ sub AddLex{
    my $new = TipJar::Motion::lexicon->new;
    $new->outer($invocant->outer);
    $new->aa($argument->aa);
+   $new->comment($argument->comment);
    $invocant->outer($new);
    $invocant
 }
@@ -176,6 +177,23 @@ use vars ('@ISA');
 @ISA = ('TipJar::Motion::Mote');
 sub process { die 'FIXME' }
 
+package TipJar::Motion::universeop;  # return a stringlit containing all visible names
+use TipJar::Motion::type 'TACKLEOP';
+use strict;
+use parent 'TipJar::Motion::Mote';
+sub process { my ($op, $P) = @_;
+   my $string = '';
+   for (my $L = $P->lexicon; $L; $L = $L->outer){
+       $string .= $L->comment;
+       $string .= ': ';
+       $string .= join " ", sort keys %{$L->aa};
+       $string .= "\n"
+   };
+   my $ret = TipJar::Motion::stringliteral->new;
+   $P->sponsor($ret);
+   $ret->string($string);
+   $ret
+}
 1;
 
 

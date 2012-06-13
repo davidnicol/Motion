@@ -21,6 +21,7 @@ sub load_IL{
    $old and return OldMote($old);
    warn "constructing new initial lexicon\n";
    my $l = OldMote bootstrap_set("INITIAL LEX", TipJar::Motion::lexicon->new->moteid);
+   $l->comment(__PACKAGE__);
    $l->AddTerms(
        'NOTHING' => TipJar::Motion::null->new,        # a no-op mote, or empty return value
 	   'STRING' => TipJar::Motion::string->new,       # the next ws-delim char seq becomes a string
@@ -63,6 +64,7 @@ sub load_IL{
 	   'ASTORE' => TipJar::Motion::astore->new,
 	   'AFETCH' => TipJar::Motion::afetch->new,
 	   'GENSYM' => TipJar::Motion::gensym->new,
+	   'LIST' => TipJar::Motion::universeop->new,
 	   
 	   
 ## the 2011 test suite is slowly getting deleted from here as it moves to TESTS.pl
@@ -80,18 +82,9 @@ sub load_IL{
 #          input: 'name q heredoc x abc def x Q',
 #       expected: 'abc def'
 #     
-#           name: 'ephemeral mote identifiers include type',
-#          input: 'sequence x abcdef x ',
-#       expected: '\\d+SEQUENCE'
-#     
 #           name: 'name nothing fail',
 #          input: 'a name a',
 #       expected: 'a fail name_missing_thing'
-#     
-#           name: 'name noname fail',
-#          input: 'a name',
-#       expected: 'a fail name_missing_name'
-#     
 
      
    
