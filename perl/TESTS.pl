@@ -43,7 +43,8 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  # a sequence with a placeholder
  'sequence Y placeholder Y', $MRX,
  # remember a sequence
- 'forget sq1 name sq1
+ 'forget sq1
+  name sq1
        sequence voom placeholder voom
   sq1
   remember sq1', $MRX,

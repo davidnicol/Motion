@@ -131,7 +131,7 @@ sub argtypelistref{ [TipJar::Motion::sequencetype::type()] }
 sub process{ my ($op, $P, $Seq) = @_;
     my $wants = $Seq->argtypelistref;
     warn "Performing sequence, want [@$wants]";
-    my @args = $P->getargs($Seq->argtypelistref);
+    my @args = $P->getargs($Seq->PerformTime_argtypelistref);
     warn "got sequence args [@args]";
     my @Filled = $Seq->perform(@args);
     warn "perform yielded [@Filled]";
@@ -207,7 +207,7 @@ SOURCE
  @Motes  # the PERFORM verb unshifts this into parser->prepend
 }
 POSTAMBLE
-    $ocode .= "sub argtypelistref { [ qw/@ARGTYPELIST/ ] }\n";
+    $ocode .= "sub PerformTime_argtypelistref { [ qw/@ARGTYPELIST/ ] }\n";
     my $newSeq = TipJar::Motion::configuration::usertype( $parser, $ocode);
     $newSeq->sponsor($_) for @SPONSORME;
     $newSeq;
