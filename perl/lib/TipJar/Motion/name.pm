@@ -46,12 +46,25 @@ our @ISA = qw'TipJar::Motion::remember';
 use TipJar::Motion::null;
 use TipJar::Motion::string;
 use TipJar::Motion::anything;
-use TipJar::Motion::null;
 sub argtypelistref{ [STRING] };
 sub process { my ($op, $parser, $name) = @_;
   $name = uc $name->string;
   delete ${$parser->lexicon->outer->aa}{$name};
   delete ${$parser->lexicon->aa}{$name};
+  retnull
+}
+
+package TipJar::Motion::pull; 
+use TipJar::Motion::type 'PULL OP';
+our @ISA = qw'TipJar::Motion::remember';
+use TipJar::Motion::null;
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+sub process { my ($op, $parser, $name) = @_;
+  $name = uc $name->string;
+  my $LR = $parser->lexicon->outer->lookup($name);
+  $LR or die "ATTEMPT TO PULL NONEXISTENT NAME [$name]";
+  ${$parser->lexicon->aa}{$name} = $LR;
   retnull
 }
 

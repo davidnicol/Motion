@@ -3,6 +3,9 @@ We maintain a strong distinction between names and things.
 Names are character strings, while things are motes.
 Names are found in lexicons, and can be placed into the current
 lexicon with the NAME [name] [thing] operator.
+Things may be referred to by their mote identifier strings
+as well as by their names, from anywhere. Avoid revealing Mote
+identifier strings.
 
 As the current lexicon does not persist beyond the life
 of the parser containing it, the REMEMBER [name] operator
@@ -43,4 +46,15 @@ list all available names in the current parser's lexicon, by level
 
 WORKSPACE
 
-creates and returns a new workspace mote one in from the current scope
+creates and returns a new workspace mote one in from the current scope. This workspace can be used to
+refer to the current lexicon from other places. Workspaces are intended as "user accounts" so
+multiple projects can coexist in the same Motion server.
+
+SAFE
+
+set the current lexicon's outer lexicon to an empty lexicon. This has the effect that only names
+that have been declared into the current lexicon are available.
+
+PULL name
+
+copies the looked-up name into the current lexicon so that it will be available within a SAFE zone
