@@ -129,9 +129,10 @@ use TipJar::Motion::null;  ### retnull
 use TipJar::Motion::scopeutil;  ### PUSHSCOPE, POPSCOPE
 sub argtypelistref{ [TipJar::Motion::sequencetype::type()] }
 sub process{ my ($op, $P, $Seq) = @_;
-    my $wants = $Seq->argtypelistref;
+    my $wants = $Seq->PerformTime_argtypelistref;
     warn "Performing sequence, want [@$wants]";
-    my @args = $P->getargs($Seq->PerformTime_argtypelistref);
+    my @args = $P->getargs($TipJar::Motion::Global::engine,$wants);
+    @args == @$wants or die "required [@$wants] but got [@args]";
     warn "got sequence args [@args]";
     my @Filled = $Seq->perform(@args);
     warn "perform yielded [@Filled]";
@@ -209,6 +210,7 @@ SOURCE
 POSTAMBLE
     $ocode .= "sub PerformTime_argtypelistref { [ qw/@ARGTYPELIST/ ] }\n";
     my $newSeq = TipJar::Motion::configuration::usertype( $parser, $ocode);
+    warn "source code for $newSeq is:\n$ocode\n--";
     $newSeq->sponsor($_) for @SPONSORME;
     $newSeq;
 }

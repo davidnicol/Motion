@@ -33,7 +33,8 @@ sub load_IL{
 	   #REMEMBER  op to store a name into the immediately outer scope, same syntax as NAME
 	   'REMEMBER0' =>  TipJar::Motion::remember->new, # will be replaced with REMEMBER
 	   'FORGET0'   => TipJar::Motion::forget->new, # will be replaced with FORGET
-	   'PULL0'   => TipJar::Motion::forget->new, # will be replaced with PULL
+	   'PULL0'   => TipJar::Motion::pull->new, # will be replaced with PULL
+	   'PULLAS'   => TipJar::Motion::pullas->new, # PULLAS alias STRING named-thing
 	   #SEQUENCE  creates a new template that takes args
 	   #PERFORM   fill and run a SEQUENCE
 	   #TYPE      creates a new type

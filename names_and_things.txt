@@ -18,9 +18,6 @@ persist.
 Within a SAFE, REMEMBER will write names into the empty outer
 lexicon.
 
-the result of a SAFE [keyword-list] [sequence] operation is
-that lexicon, allowing SAFE to be used to construct lexicon
-objects.
 
 Reference:
 
@@ -52,9 +49,31 @@ multiple projects can coexist in the same Motion server.
 
 SAFE
 
-set the current lexicon's outer lexicon to an empty lexicon. This has the effect that only names
-that have been declared into the current lexicon are available.
+Creates and returns a new empty workspace, with a copy of the current scope as the outer lexicon.
+This has the effect that only names that have been NAMEd or PULLed into the current lexicon are available.
 
 PULL name
 
-copies the looked-up name into the current lexicon so that it will be available within a SAFE zone
+copies the looked-up name into the current lexicon so that it will be available within a SAFE zone. Like
+NAME, REMEMBER and FORGET, this is a macro that automatically escapes the token following it into string form.
+
+PULLAS alias STRING outername
+
+like PULL, but takes an initial name argument (like name). The name of the already-named thing (which must
+be in an outer scope) must be escaped with the STRING escaping operator.
+
+ENTER workspace
+
+parse in the specified workspace
+
+EVALIN workspace string
+
+treat the provided string as Motion input to a parser operating in the workspace. This operator returns
+a SEQUENCE mote which can be run using PERFORM to create a pore. For a pore that is not vulnerable to
+redefinition of names within a workspace, immediately PERFORM an EVALIN of a string that itself defines
+a sequence and use the returned sequence as the pore, for instance:
+
+       NAME USDBALANCEACCESSOR PERFORM EVALIN ACCOUNTSWS HEREDOC X SEQUENCE XX
+             FETCH ? USD
+       XX X
+ 

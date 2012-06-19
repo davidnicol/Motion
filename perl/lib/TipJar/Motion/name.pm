@@ -67,6 +67,20 @@ sub process { my ($op, $parser, $name) = @_;
   ${$parser->lexicon->aa}{$name} = $LR;
   retnull
 }
+package TipJar::Motion::pullas; 
+use TipJar::Motion::type 'PULLAS OP';
+our @ISA = qw'TipJar::Motion::Mote';
+use TipJar::Motion::null;
+use TipJar::Motion::string;
+sub argtypelistref{ [STRING,STRING] };
+sub process { my ($op, $parser, $alias, $name) = @_;
+  $name = uc $name->string;
+  $alias = uc $alias->string;
+  my $LR = $parser->lexicon->outer->lookup($name);
+  $LR or die "ATTEMPT TO PULL NONEXISTENT NAME [$name]";
+  ${$parser->lexicon->aa}{$alias} = $LR;
+  retnull
+}
 
 
 1;

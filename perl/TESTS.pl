@@ -52,13 +52,17 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  'perform sq1 boing nothing','boing',
  
 #           name: 'placeholder layering',
-'name t test
+'name comma ,
+ name is is name what what
+ name t test
  name wg heredoc z we got z
  name s1 sequence x
     perform placeholder t wg
     x
  name inner sequence h
-    :2 :1 , :1 is what :2 h perform s1 inner',
+    :2 :1 comma :1 is what :2
+    h
+ perform s1 inner',
  'we got test , test is what we got',
  
  

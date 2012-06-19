@@ -58,6 +58,7 @@ By default, the parser reads a series of Crockford characters
 
 my $depth = 0;
 sub getargs{ my ($subparser, $engine, $wants) = @_;
+      $wants or Carp::confess("CALLING CONVENTION: PARSER -> ( ENGINE, ARGTYPE_AREF )");
       my @args;
       my $i; $depth++;
 eval {
@@ -122,6 +123,7 @@ sub next_mote{
     my @args;
     @$wants and @args = $lookup_result->parser($parser)->getargs($engine, $wants);
     DEBUG and warn "checkpoint";
+    $TipJar::Motion::Global::engine = $engine;
     unshift @$prepend, $lookup_result->process($parser,@args);
     # warn "parser output list: [@$prepend]";
     DEBUG and warn "checkpoint. prepend is a ".ref $prepend;
