@@ -21,9 +21,15 @@ sub init {
 }
 
 sub resign { $typemote -> unsponsor( shift ) }  # after this, should be cleaned on next GC
+sub argtypelistref { [ ] }
+sub process { $_[0] }
 
+package TipJar::Motion::workspace_enter_op;
 use strict;
-sub process{ my ($W,$P) = @_; # overwrite parser's workspace
+use TipJar::Motion::type 'WS ENTER OP';
+use parent 'TipJar::Motion::Mote';
+sub argtypelistref { [ TipJar::Motion::workspace::type() ] }
+sub process{ my ($op,$P,$W) = @_; # overwrite parser's workspace
    $P->sponsor($W);
    $P->lexicon($W); # overwrite previous workspace
    TipJar::Motion::null->new

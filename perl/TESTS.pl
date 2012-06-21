@@ -66,10 +66,25 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  'we got test , test is what we got',
  
  
+ ##############
+ #
+ #  WORKSPACES AND SAFE
+ #
+ ##############
+ 
+ 'forget wsx blubb', 'blubb',
+ 'name wsx workspace one remember wsx two enter wsx wsx three ' , "one two $MRX three",
+ 'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
+ 'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
+ 'name abc def evalin wsx heredoc !!! name foo foostring !!! abc foo', 'def foo',
+ 'foo enter wsx foo','foo foostring', 
+ 
+ 
+ 
               # 'only listed symbols are available within safe',
-              # safe takes ... what, exactly? a lex, then a heredoc?
-              # define begin and end as scopers?
-              # hmmm..... 
+              # safe creates a workspace from a copy of the current namespace
+              # workspaces are themselves unless entered with the ENTER operator
+              # 
               # 'name a alpha name b zzz perform safe a begin a b end', 'alpha b',
 #     
 

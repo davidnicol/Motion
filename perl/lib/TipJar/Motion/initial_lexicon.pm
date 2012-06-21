@@ -44,6 +44,7 @@ sub load_IL{
 	   #LIBRARY op to insert a lexicon into the current lexicon chain (AddLex method)
 	   #WORKSPACE op to construct a new workspace under the current one
 	   'WORKSPACE' => TipJar::Motion::workspace_constructor->new,
+	   'ENTER' => TipJar::Motion::workspace_enter_op->new,
 	   #OUTER op to obtain the moteID of the outer workspace that REMEMBER saves names into
 	   #SAFE  op to create a limited workspace
 	   'SAFE' => TipJar::Motion::safe->new,
@@ -58,7 +59,6 @@ sub load_IL{
 	   'SEQUENCE'    => TipJar::Motion::sequence->new,
 	   'PERFORM'    => TipJar::Motion::perform->new,
 	   'PLACEHOLDER' => TipJar::Motion::placeholder->new,
-	   '?' => TipJar::Motion::placeholder->new,
 	   'SETMOTE' => TipJar::Motion::setmote->new,
 	   'FETCHMOTE' => TipJar::Motion::fetchmote->new,
 	   'STORE' => TipJar::Motion::store->new,
@@ -92,6 +92,8 @@ sub load_IL{
    
    
    );
+   
+   $l->aa->{'?'} = $l->aa->{'PLACEHOLDER'};
    ##### initial motes defined in terms of core motes
    my @LPSresult = $l->ParseString(<<PHASE2);
 name remember macro X remember0 string X
