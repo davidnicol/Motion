@@ -23,7 +23,9 @@ sub init {
 sub resign { $typemote -> unsponsor( shift ) }  # after this, should be cleaned on next GC
 sub argtypelistref { [ ] }
 sub process { $_[0] }
-
+sub UNIVERSAL::is_workspace{0}
+sub is_workspace{1}
+sub accept { $_[1]->is_workspace() }
 package TipJar::Motion::workspace_enter_op;
 use strict;
 use TipJar::Motion::type 'WS ENTER OP';
@@ -34,6 +36,7 @@ sub process{ my ($op,$P,$W) = @_; # overwrite parser's workspace
    $P->lexicon($W); # overwrite previous workspace
    TipJar::Motion::null->new
 }
+
 package TipJar::Motion::workspace_constructor;
 use TipJar::Motion::type 'WSCONS';
 use parent 'TipJar::Motion::Mote';
@@ -45,4 +48,17 @@ sub process{ my ($self,$P) = @_;  # create a new workspace linked to current
    $W
 }
 
+package TipJar::Motion::evalin_op;
+use TipJar::Motion::type 'WS EVALIN OP';
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::string;
+use TipJar::Motion::null;
+use TipJar::Motion::fail;
+sub argtypelistref { [ TipJar::Motion::workspace::type(), STRING ] }
+sub process{ my ($op,$P,$WS,$string) = @_; # overwrite parser's workspace
+   my @results = eval { ( $WS->ParseString( $string->string ), retnull ) };
+   @results or Mthrow("EVALIN: $@");
+   $P->sponsor($_) for @results;
+   @results
+}
 1;

@@ -65,7 +65,7 @@ eval {
       for my $w (@$wants){ ++$i;
         warn ">>> $depth $i $w require operand ".readscalar($w);
         my $arg = $subparser->next_mote($engine);
-        warn "<<< $depth $i $w got operand ".(ref($arg)||'NONREF');
+        warn "<<< $depth $i $w got operand $arg, a".(ref($arg)||'NONREF');
         readscalar($w)->accept($arg) or die "ARG TYPE MISMATCH";
         push @args, $arg;
       };1

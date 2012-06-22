@@ -76,8 +76,10 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  'name wsx workspace one remember wsx two enter wsx wsx three ' , "one two $MRX three",
  'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
  'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
+ 'name abc def evalin wsx heredoc !!! name foo foostring remember foo !!! abc foo', 'def foo',
+ 'foo enter wsx foo forget foo foo ','foo foostring foo', # remember persists into workspace 
  'name abc def evalin wsx heredoc !!! name foo foostring !!! abc foo', 'def foo',
- 'foo enter wsx foo','foo foostring', 
+ 'foo enter wsx foo','foo foo',  # name does not persist into workspace
  
  
  

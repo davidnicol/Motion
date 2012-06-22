@@ -68,12 +68,5 @@ parse in the specified workspace
 
 EVALIN workspace string
 
-treat the provided string as Motion input to a parser operating in the workspace. This operator returns
-a SEQUENCE mote which can be run using PERFORM to create a pore. For a pore that is not vulnerable to
-redefinition of names within a workspace, immediately PERFORM an EVALIN of a string that itself defines
-a sequence and use the returned sequence as the pore, for instance:
-
-       NAME USDBALANCEACCESSOR PERFORM EVALIN ACCOUNTSWS HEREDOC X SEQUENCE XX
-             FETCH ? USD
-       XX X
- 
+treat the provided string as Motion input to a parser operating in the workspace. The string is evaluated
+one layer in from the workspace, so symbols NAMEd in the string do not persist in the workspace but REMEMBERed ones do.

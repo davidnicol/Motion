@@ -45,6 +45,7 @@ sub load_IL{
 	   #WORKSPACE op to construct a new workspace under the current one
 	   'WORKSPACE' => TipJar::Motion::workspace_constructor->new,
 	   'ENTER' => TipJar::Motion::workspace_enter_op->new,
+	   'EVALIN' => TipJar::Motion::evalin_op->new,
 	   #OUTER op to obtain the moteID of the outer workspace that REMEMBER saves names into
 	   #SAFE  op to create a limited workspace
 	   'SAFE' => TipJar::Motion::safe->new,
