@@ -43,7 +43,6 @@ sub AddLex{
 
 BEGIN{
   *_outer = TipJar::Motion::configuration::accessor('lexicon outer');
-  *comment = TipJar::Motion::configuration::accessor('lexicon comment');
   *aa = TipJar::Motion::configuration::accessor('lexicon aa');
 }
 
