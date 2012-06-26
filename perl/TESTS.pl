@@ -93,16 +93,17 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
 
 );
 
-$fails = 0;
-while (@tests){
+my @fails;
+my @_tests = ( @ARGV ? @tests[map { (2*--$_, 2*$_ + 1) } @ARGV] : @tests);
+while (@_tests){
     # $counter > 22 and last;
-    my $input = shift @tests;
-    my $expected = shift @tests;
+    my $input = shift @_tests;
+    my $expected = shift @_tests;
     my $output = `echo '$input' | /usr/bin/perl Motion.pl`;
     s/\s+/ /g for ($expected, $output);
     $counter++;
     $output =~ m/^\s*$expected\s*$/ and next;
-    $fails++;
+    push @fails, $counter;
     print "FAILED TEST $counter\n";
     print "INPUT    [$input]\n";
     print "EXPECTED [$expected]\n";
@@ -111,4 +112,4 @@ while (@tests){
 
 
 
-print "failed $fails of $counter\n"; 
+print "failed ${\(0 + @fails)} of $counter: @fails\n"; 
