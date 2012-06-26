@@ -72,10 +72,13 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  #
  ##############
  
- 'forget wsx blubb', 'blubb',
+ 'workspace',$MRX,
+              
+ 'arkle forget wsx blubb forget safe1 bleeb', 'arkle blubb bleeb',
  'name wsx workspace one remember wsx two enter wsx wsx three ' , "one two $MRX three",
  'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
- 'name abc def enter wsx abc', 'abc', # on entering a ws, old symbols no longer available
+ 'name abc def name safe1 safe remember safe1 enter safe1 remember abc', 'remember def', # within safe, most names are lost
+ 'enter safe1 remember abc', 'remember def', # safes can be remembered
  'name abc def evalin wsx heredoc !!! name foo foostring remember foo !!! abc foo', 'def foo',
  'foo enter wsx foo forget foo foo ','foo foostring foo', # remember persists into workspace 
  'name abc def evalin wsx heredoc !!! name foo foostring !!! abc foo', 'def foo',

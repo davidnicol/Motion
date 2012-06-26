@@ -14,18 +14,13 @@ use TipJar::Motion::type 'WORKSPACE CONS';
 
 my $typemote = bless \ do { my $T = type() }, 'TipJar::Motion::Mote';
 
-sub init {
-  my $W = TipJar::Motion::lexicon::init(shift);
-  $typemote->sponsor($W);
-  $W
-}
-
-sub resign { $typemote -> unsponsor( shift ) }  # after this, should be cleaned on next GC
 sub argtypelistref { [ ] }
 sub process { $_[0] }
 sub UNIVERSAL::is_workspace{0}
 sub is_workspace{1}
 sub accept { $_[1]->is_workspace() }
+
+
 package TipJar::Motion::workspace_enter_op;
 use strict;
 use TipJar::Motion::type 'WS ENTER OP';
@@ -35,17 +30,6 @@ sub process{ my ($op,$P,$W) = @_; # overwrite parser's workspace
    $P->sponsor($W);
    $P->lexicon($W); # overwrite previous workspace
    TipJar::Motion::null->new
-}
-
-package TipJar::Motion::workspace_constructor;
-use TipJar::Motion::type 'WSCONS';
-use parent 'TipJar::Motion::Mote';
-sub process{ my ($self,$P) = @_;  # create a new workspace linked to current 
-   my $W = TipJar::Motion::workspace->new();
-   $W->comment("workspace within ".$P->lexicon->comment);
-   $P->sponsor($W);
-   $W->outer($P->lexicon);
-   $W
 }
 
 package TipJar::Motion::evalin_op;
@@ -61,4 +45,31 @@ sub process{ my ($op,$P,$WS,$string) = @_; # overwrite parser's workspace
    $P->sponsor($_) for @results;
    @results
 }
+
+package TipJar::Motion::workspace_constructor;
+use TipJar::Motion::type 'WSCONS';
+use parent 'TipJar::Motion::Mote';
+sub process{ my ($self,$P) = @_;  # create a new workspace linked to current 
+   my $W = TipJar::Motion::workspace->new();
+   $W->comment("workspace within ".$P->lexicon->comment);
+   $P->sponsor($W);
+   $W->outer($P->lexicon);
+   $W
+}
+
+package TipJar::Motion::safe;
+# constructor mote for a safe environment.
+use TipJar::Motion::type 'SAFECONS OP';
+use parent 'TipJar::Motion::Mote';
+sub process{ my ($self,$P) = @_;  # create a new workspace linked to current 
+   my $W = TipJar::Motion::workspace->new();
+   my $Plexaa;
+   my @terms = keys %{$Plexaa = $P->lexicon->aa};
+   $W->comment("SAFE containing @terms");
+   $P->sponsor($W);
+   @{$W->aa}{@terms} = @{$Plexaa}{@terms};
+   $W
+}
+
+
 1;

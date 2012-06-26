@@ -169,13 +169,6 @@ sub ParseString{ my  ($lexi, $text) = @_;
    TipJar::Motion::engine->new(   $input,$output,$parser   )->process_all
 }
 
-package TipJar::Motion::safe;
-# constructor mote for a safe environment.
-use TipJar::Motion::type 'SAFE';
-use vars ('@ISA');
-@ISA = ('TipJar::Motion::Mote');
-sub process { die 'FIXME' }
-
 package TipJar::Motion::universeop;  # return a stringlit containing all visible names
 use TipJar::Motion::type 'TACKLEOP';
 use strict;
