@@ -13,4 +13,11 @@ transparent persistence and ephemerance
 
 balance between compile-time and process time resolution and coercion
 
+LISP-like semantics; SQL-like syntax
+
+Where LISP uses parentheses for associating operators and operands,
+Motion uses argument counting: all operator motes consume a set
+number of operand motes, like machine language operators consume
+a set number of operand words.
+
 

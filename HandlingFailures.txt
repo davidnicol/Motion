@@ -1,0 +1,30 @@
+
+Exception handling in Motion:
+
+Motion EH is based on C++ EH, except that no "try" is needed.
+
+The keyword to throw an exception is FAIL which takes one argument,
+which must be a base_failure or a type descended from base_failure.
+
+The keyword to catch an exception is HANDLE which takes two
+arguments. The first is the failure type that the handle will receive,
+and the second is a sequence that takes one argument.
+
+At FAIL time, the appropriate handler is found by examing
+handlers in declaration order from the innermost scope outward until
+a handler that can accept the thrown exception is found.
+
+Once the handler has been found, its sequence is performed with
+the exception as argument.
+
+Information can be attached to a failure using the FAILURE keyword,
+which takes two arguments, the first a failure type, and the second any mote,
+that will be given to the handler when the new failure type is handled.
+
+The FAILURE keyword consumes its two arguments and yields a new
+failure type mote.
+
+See TESTS.pl for examples of usage.
+
+
+

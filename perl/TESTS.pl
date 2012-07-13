@@ -84,15 +84,37 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  'name abc def evalin wsx heredoc !!! name foo foostring !!! abc foo', 'def foo',
  'foo enter wsx foo','foo foo',  # name does not persist into workspace
  
- 
- 
-              # 'only listed symbols are available within safe',
-              # safe creates a workspace from a copy of the current namespace
-              # workspaces are themselves unless entered with the ENTER operator
-              # 
-              # 'name a alpha name b zzz perform safe a begin a b end', 'alpha b',
-#     
 
+ ##############
+ #
+ #  EXCEPTIONS AND THEIR HANDLING
+ #  see HandlingFailures.txt for details.
+ #  
+ #  New keywords: base_failure, fail, ignore, handle, failure
+ #  are all defined in lib/TipJar/Motion/fail.pm
+ #
+ ##############
+ 
+ 'base_failure', $MRX, # base_failure is a type mote
+ 'fail base_failure', 'failure: unspecified failure', # that's what an unhandled base does
+
+ 'enter workspace
+  name msg string abkeedeph
+  handle
+     base_failure
+     sequence X
+        ignore ? msg
+  X
+  fail base_failure', 'abkeedeph', # introduce "ignore" too, document amongst the ops 
+ 
+  'enter workspace
+  name before string before name afta string afta
+  handle
+     base_failure
+     sequence X
+        before ? afta
+  X
+  fail failure base_failure string the_arg', 'before the_arg afta', # mess goes to seq 
 
 );
 
