@@ -116,6 +116,20 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
   X
   fail failure base_failure string the_arg', 'before the_arg afta', # mess goes to seq 
 
+################
+#
+#  the "cell" keyword: sugar to create a membrane with enumerated pores
+#  cell defines a new safe workspace including the provided list and returns it.
+#
+################
+
+  ' enter workspace
+    name one 1 name two 2 name three 3
+    name allowed_words list heredoc LLL one three LLL
+    name mycell cell allowed_words
+    evalin mycell heredoc X one two three X , then
+    enter mycell three two one ', '1 two 3 , then 3 two 1'
+
 );
 
 my @fails;
