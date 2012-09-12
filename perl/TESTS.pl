@@ -84,6 +84,35 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  'name abc def evalin wsx heredoc !!! name foo foostring !!! abc foo', 'def foo',
  'foo enter wsx foo','foo foo',  # name does not persist into workspace
  
+ ###################
+ #
+ #  LIBRARIES, WHICH ARE NOT WORKSPACES
+ #  the library name space is separate from the working workspace,
+ #  or at least "remember" and "forget" skip libraries when identifying the outer scope
+ #
+ ###################
+ ' enter workspace
+     library math_lib
+     times 3 5
+     plus 99 4
+     plus 99 negative 4
+     forget cheeseburger
+     times 27 cheeseburger', '15 103 95 NaN',
+ ' arggh
+   forget testlib
+   enter workspace
+     library lib_lib
+     name frib string boogaloo
+     name testlib newlibrary
+     remember testlib
+     endmarker', 'arggh endmarker',
+ ' arggh
+   enter workspace
+     library testlib
+     frib snabz', 'arggh boogaloo snabz',
+ ' enter testlib then do something', 'fail because testlib is not a workspace',
+ ' library wsx then do something', 'fail because wsx is not a library', 
+ 
 
  ##############
  #
