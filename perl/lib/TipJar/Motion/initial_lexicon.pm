@@ -42,6 +42,8 @@ sub load_IL{
 	   #FAIL
 	   #HANDLE
 	   #LIBRARY op to insert a lexicon into the current lexicon chain (AddLex method)
+	   'LIBRARY' => TipJar::Motion::library_op->new,
+	   'NEWLIBRARY' => TipJar::Motion::newlibrary_op->new,
 	   #WORKSPACE op to construct a new workspace under the current one
 	   'WORKSPACE' => TipJar::Motion::workspace_constructor->new,
 	   'ENTER' => TipJar::Motion::workspace_enter_op->new,
@@ -114,6 +116,7 @@ remember newmote
 
 name ws1 workspace
 remember ws1
+
 PHASE2
    grep { ref $_ ne 'TipJar::Motion::null' } @LPSresult and die @LPSresult;
    $l

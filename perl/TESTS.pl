@@ -1,7 +1,7 @@
 $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
 @tests = (
 
-              'mote', $MRX,
+              'enter workspace mote', $MRX,
 
               'string ThisIsaString', 'ThisIsaString',
               'another','another',
@@ -100,12 +100,11 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
      times 27 cheeseburger', '15 103 95 NaN',
  ' arggh
    forget testlib
-   enter workspace
-     library lib_lib
-     name frib string boogaloo
-     name testlib newlibrary
-     remember testlib
-     endmarker', 'arggh endmarker',
+   name frib string boogaloo
+   name testlib newlibrary
+   testlib
+   remember testlib
+   endmarker', "arggh $MRX endmarker",
  ' arggh
    enter workspace
      library testlib
