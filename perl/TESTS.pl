@@ -95,6 +95,7 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  #
  ##############
  
+ 'moteid base_failure', $MRX, # moteid is a primitive that yields its arg's mote id
  'base_failure', $MRX, # base_failure is a type mote
  'fail base_failure', 'failure: unspecified failure', # that's what an unhandled base does
 

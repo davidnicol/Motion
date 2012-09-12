@@ -67,6 +67,7 @@ sub load_IL{
 	   'ASTORE' => TipJar::Motion::astore->new,
 	   'AFETCH' => TipJar::Motion::afetch->new,
 	   'GENSYM' => TipJar::Motion::gensym->new,
+	   'MOTEID' => TipJar::Motion::moteid_op->new,
 	   'LIST' => TipJar::Motion::universeop->new,
 	   
 	   

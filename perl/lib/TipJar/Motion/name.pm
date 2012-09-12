@@ -82,6 +82,23 @@ sub process { my ($op, $parser, $alias, $name) = @_;
   retnull
 }
 
+package TipJar::Motion::moteid_op; 
+use TipJar::Motion::type 'moteid OP';
+our @ISA = qw'TipJar::Motion::Mote';
+use TipJar::Motion::null;
+use TipJar::Motion::string;
+use TipJar::Motion::anything;
+sub argtypelistref{ [ANYTHING] };
+sub process { my ($op, $parser, $arg) = @_;
+     my $moteid = $$arg;
+     warn "op: $op";
+     warn "parser: $parser";
+     warn "arg: $arg";
+     warn "moteid: $moteid";
+     my $r = TipJar::Motion::stringliteral->new;
+     $r->string(" $moteid ");
+     $r
+}
 
 1;
 
