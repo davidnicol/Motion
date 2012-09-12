@@ -48,6 +48,14 @@ package TipJar::Motion::failOP;
 
 
 package TipJar::Motion::ignoreOP;
+use strict;
+use TipJar::Motion::type 'IGNORE OP';
+use parent 'TipJar::Motion::Mote';
+use TipJar::Motion::anything;
+sub argtypelistref { [ ANYTHING ] }
+sub process{ my ($op,$P,$A) = @_;
+   TipJar::Motion::null->new
+}
 
 
 package TipJar::Motion::handleOP;

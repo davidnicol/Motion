@@ -61,7 +61,14 @@ sub next_mote{
 
     my ($pack,$engine) = @_;
     
-    my ($ws,$brax) = get_token($engine->input);
+    my ($ws,$brax);
+    $brax = shift @{$engine->parser->prepend};
+    if ($brax){
+        $brax = $brax->string;
+    }else{
+        ($ws,$brax) = get_token($engine->input);
+    };
+    
     DEBUG and warn "bracket token: [$brax]";
 	$brax = uc $brax;
     my ($token,$retstring);

@@ -65,6 +65,20 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  perform s1 inner',
  'we got test , test is what we got',
  
+ ##############
+ #
+ # MACROS CAN END WITH HEREDOC BRACKETS
+ #
+ ##############
+ 
+'enter workspace 
+   string newsyntax:
+   name closer string */
+   name /* macro XX
+                     ignore heredoc closer
+                 XX
+   /* this is a comment */
+   ta-daaaah ', 'newsyntax: ta-daaaah',
  
  ##############
  #
@@ -97,7 +111,7 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
      plus 99 4
      plus 99 negative 4
      forget cheeseburger
-     times 27 cheeseburger', '15 103 95 NaN',
+     times 27 cheeseburger', 'SKIP 15 103 95 NaN',
  ' arggh
    forget testlib
    name frib string boogaloo
@@ -109,8 +123,8 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
    enter workspace
      library testlib
      frib snabz', 'arggh boogaloo snabz',
- ' enter testlib then do something', 'fail because testlib is not a workspace',
- ' library wsx then do something', 'fail because wsx is not a library', 
+ ' enter testlib then do something', 'SKIP fail because testlib is not a workspace',
+ ' library wsx then do something', 'SKIP fail because wsx is not a library', 
  
 
  ##############
@@ -123,9 +137,9 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
  #
  ##############
  
- 'moteid base_failure', $MRX, # moteid is a primitive that yields its arg's mote id
- 'base_failure', $MRX, # base_failure is a type mote
- 'fail base_failure', 'failure: unspecified failure', # that's what an unhandled base does
+ #'moteid base_failure', "SKIP $MRX", # moteid is a primitive that yields its arg's mote id
+ #'base_failure', $MRX, # base_failure is a type mote
+ 'fail base_failure', 'SKIP failure: unspecified failure', # that's what an unhandled base does
 
  'enter workspace
   name msg string abkeedeph
@@ -134,7 +148,7 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
      sequence X
         ignore ? msg
   X
-  fail base_failure', 'abkeedeph', # introduce "ignore" too, document amongst the ops 
+  fail base_failure', 'SKIP abkeedeph', # introduce "ignore" too, document amongst the ops 
  
   'enter workspace
   name before string before name afta string afta
@@ -143,7 +157,7 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
      sequence X
         before ? afta
   X
-  fail failure base_failure string the_arg', 'before the_arg afta', # mess goes to seq 
+  fail failure base_failure string the_arg', 'SKIP before the_arg afta', # mess goes to seq 
 
 ################
 #
@@ -157,19 +171,19 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
     name allowed_words list heredoc LLL one three LLL
     name mycell cell allowed_words
     evalin mycell heredoc X one two three X , then
-    enter mycell three two one ', '1 two 3 , then 3 two 1'
+    enter mycell three two one ', 'SKIP 1 two 3 , then 3 two 1'
 
 );
 
 my @fails;
 my @_tests = ( @ARGV ? @tests[map { (2*--$_, 2*$_ + 1) } @ARGV] : @tests);
 while (@_tests){
-    # $counter > 22 and last;
+    $counter++;
     my $input = shift @_tests;
     my $expected = shift @_tests;
+    if($expected =~ /^SKIP /){ print "SKIPPING ",$counter,"\n"; next };
     my $output = `echo '$input' | /usr/bin/perl Motion.pl`;
     s/\s+/ /g for ($expected, $output);
-    $counter++;
     $output =~ m/^\s*$expected\s*$/ and next;
     push @fails, $counter;
     print "FAILED TEST $counter\n";

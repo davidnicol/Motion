@@ -16,6 +16,7 @@ use TipJar::Motion::string;
 use TipJar::Motion::workspace;
 use TipJar::Motion::hereparser;
 use TipJar::Motion::sequence;
+use TipJar::Motion::fail;
 sub load_IL{
    my $old = bootstrap_get("INITIAL LEX");
    $old and return OldMote($old);
@@ -41,6 +42,8 @@ sub load_IL{
 	   #MATH
 	   #FAIL
 	   #HANDLE
+	   #IGNORE ignore one argument
+	   'IGNORE' => TipJar::Motion::ignoreOP->new,
 	   #LIBRARY op to insert a lexicon into the current lexicon chain (AddLex method)
 	   'LIBRARY' => TipJar::Motion::library_op->new,
 	   'NEWLIBRARY' => TipJar::Motion::newlibrary_op->new,
@@ -99,25 +102,34 @@ sub load_IL{
    
    $l->aa->{'?'} = $l->aa->{'PLACEHOLDER'};
    ##### initial motes defined in terms of core motes
-   my @LPSresult = $l->ParseString(<<PHASE2);
+   warn 'LOADING INITIAL BOOTSTRAP PRIMITIVES';
+   my @LPSresult;
+   do {
+       warn $_;
+       push @LPSresult, $l->ParseString($_)
+   } for <<B1, <<B2, <<B3, <<B4;
 name remember macro X remember0 string X
 remember remember
 name forget macro X forget0 string X
 remember forget
 forget remember0
 forget forget0
+B1
 
 name pull macro X pull0 string X
 remember pull
 forget pull0
+B2
 
 name newmote macro X name ? mote X
 remember newmote
+B3
 
 name ws1 workspace
 remember ws1
+B4
 
-PHASE2
+   warn "BOOTSTRAPPING YIELDED [@LPSresult]";
    grep { ref $_ ne 'TipJar::Motion::null' } @LPSresult and die @LPSresult;
    $l
 }
