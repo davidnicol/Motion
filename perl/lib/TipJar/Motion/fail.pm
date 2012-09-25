@@ -45,8 +45,18 @@ sub is_failure{1}
 sub accept{  $_[1]->is_failure  } # $_[0] got us here
 
 package TipJar::Motion::failOP;
-
-
+use strict;
+use TipJar::Motion::type 'FAIL OP';
+use parent 'TipJar::Motion::Mote';
+sub argtypelistref { [ TipJar::Motion::base_failure::type() ] }
+sub process{ my ($op,$P,$F) = @_;
+   # seek out handlers registered with the parser
+   # and goto the first one that can accept $F
+   for my $handler ($P->failure_handlers){
+      $handler->accept($F) and return $handler->handle($F)
+   };
+   die "no handler found for $F"
+}
 package TipJar::Motion::ignoreOP;
 use strict;
 use TipJar::Motion::type 'IGNORE OP';
@@ -58,10 +68,10 @@ sub process{ my ($op,$P,$A) = @_;
 }
 
 
-package TipJar::Motion::handleOP;
+package TipJar::Motion::handleOP; # handler factory
 
 
-package TipJar::Motion::failureOP;
+package TipJar::Motion::failureOP; # failure factory
 
 
 

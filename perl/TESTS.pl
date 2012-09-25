@@ -174,14 +174,18 @@ $MRX = '[0-9A-Z*=~$]{25}';  # Moteid REGEX
     enter mycell three two one ', 'SKIP 1 two 3 , then 3 two 1'
 
 );
-
+my @skips;
 my @fails;
 my @_tests = ( @ARGV ? @tests[map { (2*--$_, 2*$_ + 1) } @ARGV] : @tests);
 while (@_tests){
     $counter++;
     my $input = shift @_tests;
     my $expected = shift @_tests;
-    if($expected =~ /^SKIP /){ print "SKIPPING ",$counter,"\n"; next };
+    if($expected =~ s/^SKIP // and !@ARGV){ ### specify by number to run skipped test 
+         print "SKIPPING ",$counter,"\n";
+         push @skips, $counter;
+         next
+    };
     my $output = `echo '$input' | /usr/bin/perl Motion.pl`;
     s/\s+/ /g for ($expected, $output);
     $output =~ m/^\s*$expected\s*$/ and next;
@@ -195,3 +199,6 @@ while (@_tests){
 
 
 print "failed ${\(0 + @fails)} of $counter: @fails\n"; 
+
+@skips and
+print "skipped ${\(0 + @skips)} of $counter: @skips\n"; 
