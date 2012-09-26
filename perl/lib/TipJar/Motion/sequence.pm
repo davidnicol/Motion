@@ -46,8 +46,14 @@ sub accept { 0 }
 sub process { Carp::confess "placeholder processed in non-placeholder-aware context" }
 
 
+
+
+
+
+
 package TipJar::Motion::macro;
-use parent TipJar::Motion::hereparser;
+use parent TipJar::Motion::ListOfMotesConstructor;
+sub FactoryOutputType{ 'TipJar::Motion::DefinedMacro' } # what this factory produces
 use TipJar::Motion::type 'MAC CONS';
 
 =pod
@@ -59,9 +65,30 @@ Also, it takes two motes: one mote to be the type of the macro, and another
 mote to hold the code.
 
 =cut
+package TipJar::Motion::PlaceholderTaker;
+use TipJar::Motion::configuration;
+*ArgListRaw = accessor('argument type lists for placeholdertakers');
+sub argtypelistref{
+    my $me = shift;
+    my $ALR = $me->ArgListRaw();
+    defined $ALR or $me->ArgListRaw($ALR = $me->ComposePlaceholderTypeList());
+    [ map { OldMote($_) } split /\s+/, $ALR ]
+}
+sub ComposePlaceholderTypeList{
+    #### read our mote list and construct the list ref using the placeholders therein
+    my $me = shift;
+    my $LoM = readscalar($$me);
+    my @PHs = grep {OldMote($_)->is_placeholder} split /\s+/ $LoM;
+    ### FIXME I stopped here
+    what we want to return from this is, the ANYTHING type moteID @PHs times,
+    with spaces between.
+}
 
-use TipJar::Motion::anything;
-sub argtypelistref{ [PERLSTRING] }
+package TipJar::Motion::DefinedMacro;
+our @ISA = qw/ TipJar::Motion::PlaceholderTaker/;
+use TipJar::Motion::type 'DEFINED MACRO';
+@TipJar::Motion::PlaceholderTaker::ISA = qw/TipJar::Motion::Mote/;
+
 sub process {
    my $constructor = shift;
    my $parser = shift;

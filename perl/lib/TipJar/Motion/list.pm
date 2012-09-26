@@ -1,4 +1,50 @@
 
+=head1 ListOfMotes type is an immutable sequence
+
+the LoM type is a virtual base class for implementing
+macros, sequences, operand sets, and such.
+
+It can be created, and expanded, or otherwise parsed by implementation
+language code depending on the details of the child type.
+
+It stores as whitespace-separated moteids.
+
+=cut
+
+package TipJar::Motion::ListOfMotes;
+use parent TipJar::Motion::mote;
+use TipJar::Motion::type 'LoM';
+
+package TipJar::Motion::ListOfMotesConstructor;
+sub FactoryOutputType{ 'TipJar::Motion::ListOfMotes' } # what this factory produces
+use parent TipJar::Motion::hereparser;
+use TipJar::Motion::type 'LoM Constructor';
+use TipJar::Motion::anything;
+use TipJar::Motion::configuration;  ### get writescalar(MOTE,STRING)
+sub argtypelistref{ [PERLSTRING] }
+sub process {
+   my $constructor = shift;
+   my $parser = shift;
+   my $icode = ''.shift;
+   my $buffer;
+   my $count;
+        
+   while ($icode){ 
+        $icode =~ s/\s*(\S+)// or last;
+        my $token = $1;
+        my $lr = $parser->lexicon->lookup(uc $token);
+        $lr or Carp::confess "new barewords not allowed in mote lists: '$token' was not found";
+        $buffer .= $$lr;
+        $buffer .= (++$count %4 ? " " : "\n");        
+   };
+   chop $buffer; # lose final space-or-newline
+   my $LoM = $constructor->FactoryOutputType->new;
+    
+   writescalar($$LoM,$buffer);
+   $LoM
+};
+
+
 sub TipJar::Motion::arr_init{
    my $L = $_[0]->marrslot;
    $L and return $L;
@@ -29,6 +75,11 @@ sub process{
   ${TipJar::Motion::arr_init($mote)}[int $index->string];
 }
 
+=head1 LIST type is like a perl array
+
+the list type is a container that has full perl array semantics
+
+=cut
 
 package TipJar::Motion::list;
 use TipJar::Motion::type 'LIST';
