@@ -44,15 +44,10 @@ sub is_placeholder{1};
 sub UNIVERSAL::is_placeholder{0};
 sub accept { 0 }
 sub process { Carp::confess "placeholder processed in non-placeholder-aware context" }
-
-
-
-
-
-
+sub TypeRequired { ANYTHING }
 
 package TipJar::Motion::macro;
-use parent TipJar::Motion::ListOfMotesConstructor;
+our @ISA = qw/ TipJar::Motion::ListOfMotesConstructor /;
 sub FactoryOutputType{ 'TipJar::Motion::DefinedMacro' } # what this factory produces
 use TipJar::Motion::type 'MAC CONS';
 
@@ -66,6 +61,7 @@ mote to hold the code.
 
 =cut
 package TipJar::Motion::PlaceholderTaker;
+our @ISA = qw/TipJar::Motion::Mote/;
 use TipJar::Motion::configuration;
 *ArgListRaw = accessor('argument type lists for placeholdertakers');
 sub argtypelistref{
@@ -78,16 +74,17 @@ sub ComposePlaceholderTypeList{
     #### read our mote list and construct the list ref using the placeholders therein
     my $me = shift;
     my $LoM = readscalar($$me);
-    my @PHs = grep {OldMote($_)->is_placeholder} split /\s+/ $LoM;
-    ### FIXME I stopped here
-    what we want to return from this is, the ANYTHING type moteID @PHs times,
-    with spaces between.
+    my @TL;
+    for (split /\s+/, $LoM ) {
+        my $m = OldMote($_);
+        $m ->is_placeholder and push @TL, $m->TypeRequired->moteid
+    }; 
+    "@TL";
 }
 
 package TipJar::Motion::DefinedMacro;
 our @ISA = qw/ TipJar::Motion::PlaceholderTaker/;
 use TipJar::Motion::type 'DEFINED MACRO';
-@TipJar::Motion::PlaceholderTaker::ISA = qw/TipJar::Motion::Mote/;
 
 sub process {
    my $constructor = shift;
@@ -101,45 +98,10 @@ use TipJar::Motion::null;  ### retnull
 use TipJar::Motion::configuration;  ### OldMote
 sub accept{0};  ### macro definitions are not usable as types at this time
 sub process{ my ($self, $P, @args) = @_;
-     my @Motes;
-PREAMBLE
-
-   my @ARGTYPELIST;
-   while ($icode){  # the RAMBLE
-        $icode =~ s/\s*(\S+)// or last;
-        my $token = $1;
-        my $lr = $parser->lexicon->lookup(uc $token);
-        $lr or Carp::confess "barewords not allowed in macros; '$token' was not found";
-        if (@ARGTYPELIST){
-        # we are processing an operand list, placeholders are good here
-           my $arg = $lr;
-           if ($arg->is_placeholder){
-               push @ArgTypes, $ARGTYPELIST[0];
-               $ocode .= "push \@Motes, shift \@args;\n";
-           }else{
-               $ocode .= "push \@Motes, OldMote('$$arg');\n";
-           };
-           
-           shift @ARGTYPELIST;
-          
-        }else{
-        # want an op
-          my $op = $lr;
-          $ocode .= "push \@Motes, OldMote('$$op');\n";
-          @ARGTYPELIST = @{$op->argtypelistref}
-        
-        }
-   
-   };
-   @ARGTYPELIST and Carp::confess "MACRO DEFINITION ENDS INSIDE OPERAND LIST";
-   $ocode .= <<\POSTAMBLE;
-    $P->Unshift(  @Motes  );
+     $P->Unshift( map {
+        $_->is_placeholder ? (shift @args) : $_
+     } $self->LoM );
     retnull
-}
-POSTAMBLE
-    $ocode .= "sub argtypelistref { [ qw/@ArgTypes/ ] }\n";
-    TipJar::Motion::configuration::usertype( $parser, $ocode);
-    
 }
 
 package TipJar::Motion::sequencetype; # a type for perform to require
@@ -172,6 +134,7 @@ sub process{ my ($op, $P, $Seq) = @_;
 package TipJar::Motion::sequence;
 use strict;
 use parent 'TipJar::Motion::hereparser';
+
 use TipJar::Motion::type 'SEQ CONS';
 
 use TipJar::Motion::anything;  ### ANYTHING and PERLSTRING types

@@ -14,6 +14,8 @@ It stores as whitespace-separated moteids.
 package TipJar::Motion::ListOfMotes;
 use parent TipJar::Motion::mote;
 use TipJar::Motion::type 'LoM';
+use TipJar::Motion::configuration;  ### get readscalar(MOTE)
+sub LoM { map {OldMote $_} split /\s+/, readscalar shift }
 
 package TipJar::Motion::ListOfMotesConstructor;
 sub FactoryOutputType{ 'TipJar::Motion::ListOfMotes' } # what this factory produces
