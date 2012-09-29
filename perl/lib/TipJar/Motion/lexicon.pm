@@ -153,8 +153,8 @@ sub lookup {
 sub process{ shift->new }
 
 use TipJar::Motion::stream;
-use TipJar::Motion::engine;
 use TipJar::Motion::default_parser;
+use TipJar::Motion::engine;
 
 
 

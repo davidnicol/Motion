@@ -19,7 +19,7 @@ sub LoM { map {OldMote $_} split /\s+/, readscalar shift }
 
 package TipJar::Motion::ListOfMotesConstructor;
 sub FactoryOutputType{ 'TipJar::Motion::ListOfMotes' } # what this factory produces
-use parent TipJar::Motion::hereparser;
+our @ISA = qw/TipJar::Motion::hereparser/;
 use TipJar::Motion::type 'LoM Constructor';
 use TipJar::Motion::anything;
 use TipJar::Motion::configuration;  ### get writescalar(MOTE,STRING)

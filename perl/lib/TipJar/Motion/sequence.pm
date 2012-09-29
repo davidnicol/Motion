@@ -1,5 +1,6 @@
 
 
+warn "CHECKPOOINT";
 =pod
 
 this file contains constructors for macros and sequences.
@@ -46,6 +47,7 @@ sub accept { 0 }
 sub process { Carp::confess "placeholder processed in non-placeholder-aware context" }
 sub TypeRequired { ANYTHING }
 
+warn "CHECKPOOINT";
 package TipJar::Motion::macro;
 our @ISA = qw/ TipJar::Motion::ListOfMotesConstructor /;
 sub FactoryOutputType{ 'TipJar::Motion::DefinedMacro' } # what this factory produces
@@ -60,8 +62,10 @@ Also, it takes two motes: one mote to be the type of the macro, and another
 mote to hold the code.
 
 =cut
+
+warn "CHECKPOOINT";
 package TipJar::Motion::PlaceholderTaker;
-our @ISA = qw/TipJar::Motion::Mote/;
+our @ISA = qw/TipJar::Motion::LostOfMotes/;
 use TipJar::Motion::configuration;
 *ArgListRaw = accessor('argument type lists for placeholdertakers');
 sub argtypelistref{
@@ -82,17 +86,10 @@ sub ComposePlaceholderTypeList{
     "@TL";
 }
 
+warn "CHECKPOOINT";
 package TipJar::Motion::DefinedMacro;
 our @ISA = qw/ TipJar::Motion::PlaceholderTaker/;
 use TipJar::Motion::type 'DEFINED MACRO';
-
-sub process {
-   my $constructor = shift;
-   my $parser = shift;
-   my $icode = ''.shift;
-   my @ArgTypes;  ### will be the argtypelistref of the created type
-   my $ocode = <<\PREAMBLE;
-
 use parent 'TipJar::Motion::Mote';
 use TipJar::Motion::null;  ### retnull
 use TipJar::Motion::configuration;  ### OldMote
@@ -104,6 +101,7 @@ sub process{ my ($self, $P, @args) = @_;
     retnull
 }
 
+warn "CHECKPOOINT";
 package TipJar::Motion::sequencetype; # a type for perform to require
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'SEQTYPE';
@@ -111,6 +109,7 @@ sub UNIVERSAL::is_a_sequence{0}
 sub accept {  $_[1]->is_a_sequence  } # $_[0] got us here
 
 
+warn "CHECKPOOINT";
 package TipJar::Motion::perform; # PERFORM: op to perform a sequence
 use parent TipJar::Motion::Mote;
 use TipJar::Motion::type 'PERFORM OP';
@@ -128,8 +127,9 @@ sub process{ my ($op, $P, $Seq) = @_;
     $P->Unshift(PUSHSCOPE,@Filled,POPSCOPE);
     retnull
 }
+;
 
-
+warn "CHECKPOOINT";
 ### VERY SIMILAR TO MACRO DEFINED ABOVE BUT WITH SOME DIFFERENCES
 package TipJar::Motion::sequence;
 use strict;

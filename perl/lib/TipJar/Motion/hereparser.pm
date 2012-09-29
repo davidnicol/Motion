@@ -1,7 +1,8 @@
 
 package TipJar::Motion::hereparser;
 use strict;
-use parent 'TipJar::Motion::default_parser';
+# use parent 'TipJar::Motion::default_parser';
+our @ISA = qw'TipJar::Motion::default_parser';
 use TipJar::Motion::type 'HEREPARSER';
 sub process {  #### override this. The important action happens in  parser()
     my ($me, $parser, $string) = @_;
