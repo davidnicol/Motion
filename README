@@ -4,11 +4,33 @@
 Motion is a virtual machine that uses capability objects
 called "motes" as its base type -- instead of binary words.
 
-A mote may be referenced by its mote identifier, a hard-to-guess character string.
+Security is the first priority. Also first priorities are clarity, platform independence,
+potential for scalability through parallelism, reliability, flexibility, simplicity.
 
+Correctness is more important than speed.
+
+High-level design concepts:
+
+Motes are immutable. A "proxy mote" also known as an "adapter" may refer to something
+that is not immutable. Operation occurs via passing of UTF-8 messages. Application development
+occurs by including into a context names that expose the desired interface to functionality.
+
+"containers" that refer to mutable data are immutable, in that they specify one fixed
+mutable thing, by providing an interface to setter/getter accessors on a specific
+mutable location.
+
+the "context" is a mapping of names to motes. Contexts can be "limited" which means
+that mote identifiers will not be looked up when a limited context receives a message,
+or "unlimited" which means that mote identifiers can be used to directly refer to
+external motes not named in a context.
+
+In an unlimited context,
+a mote may be referenced by its mote identifier, a hard-to-guess character string. In
+a limited context, this feature is not available.
+
+The mapping in a context can change, using the NAME, REMEMBER, and FORGET primitives.
 
 "mote identifier" is shortened to "mote id."
-
 
 The op-codes, themselves motes, recognized by motion at any moment,
 depend on the history of the machine.
@@ -20,10 +42,9 @@ OP ARG*
 where the number of arguments required depends on the operation.
 
 Interacting with the Motion virtual machine is done by passing messages
-to it and receiving the resulting responses. The responses are white-space joined results of all motes presented in the message.
+to it and receiving the resulting responses.
 
-every whitespace-delimited token in a message must be either a mote identifier
-or a symbol that appears in the current lexicon.
+The responses are white-space joined results of all motes presented in the message.
 
 Sometimes, presentation of a single identifier is sufficient.
 
@@ -37,54 +58,99 @@ Sometimes, the initial mote both takes arguments and establishes a dictionary.
 Motes are persistent between messages, as long as they are "sponsored" by
 another mote.
 
-Every motes has a type.
+Every mote has a type. A mote can have its type set once. A mote with no type is 
+a "general purpose mote" and it can have its type set, for instance to become an
+associative array adapter.
 
 Some motes represent "motion adapters" which provide functionality not
-available in the motion language.
+available in the motion language. "L-values" are absent from the core language
+and are provided by adapters.
 
+Here is a list of names in the default dictionary, in alphabetical order,
+and what they mean:
 
-Here is a list of names in the default dictionary, and what they mean:
+:\d+ within sequences, refer to arguments by position
 
-MOTE   allocates a general purpose mote and returns it
+AA [gp] set the type of a general purpose mote to an associative array container
 
-NAME [name] [mote] writes [name] into the current dictionary as an alias
-for [mote].
+ASTORE [array] [whole number] [value] use this to store a value in a mote, under a whole number index
 
-NEWMOTE [name] is syntactic sugar that expands to NAME [name] MOTE
+AFETCH [array] [whole number] use this to recover a value stored with ASTORE
 
-SETMOTE [mote] [string] use this to store a string in a mote
+BASE_FAILURE the type from which failures derive
 
-FETCHMOTE [mote] use this to recover the string stored in a mote
+CELL [list] create a new safe workspace including the keywords in the list
 
-STRING [\S+] interpret the non-whitespace sequence as a string instead of looking it up in the dictionary
+CLOSE reject future manipulations of the context
 
-STORE [mote] [key] [value] use this to store a value in a mote, under a string key
+ENTER [context] switch to the specified context
 
-FETCH [mote] [key] use this to recover a value stored with STORE
+EVALIN [context] [string] pass the string to the context for evaluation there
 
-ASTORE [mote] [whole number] [value] use this to store a value in a mote, under a whole number index
-AFETCH [mote] [whole number] use this to recover a value stored with ASTORE
+FAIL [failure] throw an exception
 
-NOTHING a no-op mote, which does not add anything to the response but does fill an argument slot
+FETCH [aa] [key] use this to recover a value stored with STORE
 
-PLACEHOLDER in a sequence definition, PLACEHOLDER will be filled with an argument
+FETCHMOTE [scalar] use this to recover the string stored in a scalar mote
+
+FORGET [name] remove the specified name from the context
 
 GENSYM generate a hard-to-guess symbol that is not a mote id
 
+HANDLE [failure] [sequence] catch a failure derived from the specified type, and
+        perform the sequence with the failure as its one argument
+
 HEREDOC [token] [...] [token] use this to create a string containing whitespace
+
+LIBRARY [library] copy all the mappings from the specified library into the context
+
+LIMIT switch the context from unlimited to limited parsing mode
+
+LIST [string] whitespace-separate the string and create a "list mote" containing the
+              tokens therein as a list
+
+MACRO [token] ... [token] define a macro, which will get expanded when encountered
+
+MOTE   allocates a general purpose mote and returns its mote id. General purpose 
+motes are partially mutable as their types are not set yet.
+
+MOTEID [anything] return the mote-ID of the specified anything
+
+NAME [name] [mote] writes [name] into the current dictionary (the context) as an alias
+for [mote].
+
+NEWLIBRARY create a library that contains the mappings in the context
+
+NEWMOTE [name] is syntactic sugar that expands to NAME [name] MOTE
+
+NOTHING a no-op mote, which does not add anything to the response but does fill an argument slot
 
 PERFORM [sequence-mote] [arg]* invoke a sequence
 
+PLACEHOLDER in a sequence definition, PLACEHOLDER will be filled with an argument
+
+REMEMBER [string] copy the name->mote entry for the named string, in the current context,
+         into the immediately outer context
+
+SAFE     returns a mote-ID for a context mote containing the names defined in the current
+         context only, that is, without any link to outer contexts.
+
+SCALAR [gp] sets the type for a general purpose mote to an adapter to hold a string
+
 SEQUENCE [token] [...] [token] define a sequence mote using the current dictionary
 
-SAFE [token list] BEGIN [...] END only the names enumerated in the token list are available in the bodyof this sequence
+SETMOTE [scalar] [string] use this to store a string in a scalar mote.
+
+STORE [aa] [key] [value] use this to store a value in a mote, under a string key
+
+STRING [\S+] interpret the non-whitespace sequence as a string instead of looking it up in the dictionary
+
+WORKSPACE create a new context mote that is "next to" the current context, that is,
+          its outer context link points to the same place as the current context.
 
 
 
-
-
-
-copyright 2008,2009,2010,2011,2012 David Nicol / TipJar LLC
+copyright 2008,2009,2010,2011,2012,2013 David Nicol / TipJar LLC
 
 This work is licensed under the Creative Commons Attribution-ShareAlike
 3.0 Unported License. To view a copy of this license, visit
